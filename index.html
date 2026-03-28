@@ -48,7 +48,7 @@ body { display:flex; flex-direction:column; }
 /* LEFT DASHBOARD */
 .dash { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); }
 
-.spark-wrap { height:70px; flex-shrink:0; background:var(--panel); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+.spark-wrap { height:200px; flex-shrink:0; background:var(--panel); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
 #sparkline { width:100%; height:100%; display:block; }
 .spark-range { position:absolute; right:8px; bottom:5px; font-size:9px; color:var(--muted); }
 
@@ -476,7 +476,7 @@ function updatePriceDisplay() {
 let sparkBuf=[];
 function updateSparkline() {
   sparkBuf.push(S.price);
-  if(sparkBuf.length>150) sparkBuf.shift();
+  if(sparkBuf.length>1000) sparkBuf.shift();
   const cv=document.getElementById('sparkline');
   const ctx=cv.getContext('2d');
   cv.width=cv.offsetWidth; cv.height=cv.offsetHeight;
@@ -1112,7 +1112,7 @@ function init() {
   setInterval(mainLoop, 4000);
   setInterval(saveBrain, 25000);
   updateMemoryUI();
-  setTimeout(()=>log('system','✅','SYSTEM','Warmup complete — AI entering active mode'), 20000);
+  setTimeout(()=>log('system','✅','SYSTEM','Warmup complete — AI entering active mode'), 600000);
 }
 
 window.addEventListener('load', init);
