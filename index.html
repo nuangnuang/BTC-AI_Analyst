@@ -2,1587 +2,1117 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTC AI Analyst — Self-Learning Market Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BTC·AI Analyst</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap');
-
-  :root {
-    --bg: #080c10;
-    --bg2: #0d1218;
-    --bg3: #111820;
-    --panel: #0f1922;
-    --border: #1a2535;
-    --accent: #00d4ff;
-    --accent2: #ff6b35;
-    --green: #00e676;
-    --red: #ff3d5a;
-    --yellow: #ffd600;
-    --purple: #b388ff;
-    --text: #c8d8e8;
-    --muted: #4a6070;
-    --dim: #2a3a4a;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    overflow: hidden;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Header */
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 15px;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-  }
-
-  .logo span { color: var(--accent2); }
-
-  .price-display {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-
-  #live-price {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.02em;
-  }
-
-  #price-change {
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .status-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .badge {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .badge.online { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
-  .badge.offline { background: rgba(255,61,90,0.12); color: var(--red); border: 1px solid rgba(255,61,90,0.25); }
-  .badge.learning { background: rgba(0,212,255,0.12); color: var(--accent); border: 1px solid rgba(0,212,255,0.25); }
-
-  .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  #ai-confidence {
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  /* Main layout */
-  .main {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    grid-template-rows: 1fr;
-    flex: 1;
-    overflow: hidden;
-    gap: 0;
-  }
-
-  /* Log panel */
-  .log-panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-right: 1px solid var(--border);
-  }
-
-  .panel-header {
-    padding: 8px 16px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-
-  .panel-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-  }
-
-  #log-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-    scroll-behavior: smooth;
-  }
-
-  #log-container::-webkit-scrollbar { width: 3px; }
-  #log-container::-webkit-scrollbar-track { background: transparent; }
-  #log-container::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
-
-  .log-entry {
-    display: flex;
-    gap: 10px;
-    padding: 4px 16px;
-    border-left: 2px solid transparent;
-    transition: background 0.1s;
-  }
-
-  .log-entry:hover { background: rgba(255,255,255,0.02); }
-
-  .log-entry.analysis { border-left-color: var(--accent); background: rgba(0,212,255,0.03); }
-  .log-entry.prediction { border-left-color: var(--yellow); background: rgba(255,214,0,0.03); }
-  .log-entry.evaluation { border-left-color: var(--purple); background: rgba(179,136,255,0.04); }
-  .log-entry.absorption { border-left-color: var(--accent2); background: rgba(255,107,53,0.04); }
-  .log-entry.spike { border-left-color: var(--red); background: rgba(255,61,90,0.04); }
-  .log-entry.learn { border-left-color: var(--green); background: rgba(0,230,118,0.03); }
-  .log-entry.system { border-left-color: var(--dim); }
-  .log-entry.warn { border-left-color: var(--yellow); background: rgba(255,214,0,0.03); }
-
-  .log-time {
-    color: var(--muted);
-    font-size: 10px;
-    white-space: nowrap;
-    margin-top: 1px;
-    min-width: 62px;
-  }
-
-  .log-icon {
-    font-size: 11px;
-    min-width: 14px;
-    text-align: center;
-  }
-
-  .log-body { flex: 1; }
-
-  .log-label {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 1px;
-  }
-
-  .log-entry.analysis .log-label { color: var(--accent); }
-  .log-entry.prediction .log-label { color: var(--yellow); }
-  .log-entry.evaluation .log-label { color: var(--purple); }
-  .log-entry.absorption .log-label { color: var(--accent2); }
-  .log-entry.spike .log-label { color: var(--red); }
-  .log-entry.learn .log-label { color: var(--green); }
-  .log-entry.system .log-label { color: var(--muted); }
-  .log-entry.warn .log-label { color: var(--yellow); }
-
-  .log-msg { color: var(--text); font-size: 12px; }
-  .log-msg .hl-green { color: var(--green); font-weight: 600; }
-  .log-msg .hl-red { color: var(--red); font-weight: 600; }
-  .log-msg .hl-yellow { color: var(--yellow); }
-  .log-msg .hl-accent { color: var(--accent); }
-  .log-msg .hl-purple { color: var(--purple); }
-  .log-msg .hl-orange { color: var(--accent2); }
-  .log-msg .dim { color: var(--muted); }
-
-  /* Right panel */
-  .right-panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    gap: 0;
-  }
-
-  /* Metrics */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .metric-card {
-    background: var(--panel);
-    padding: 10px 14px;
-  }
-
-  .metric-label {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-
-  .metric-value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-  }
-
-  .metric-sub {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  /* Projection card */
-  .projection-card {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 14px;
-    flex-shrink: 0;
-  }
-
-  .proj-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  .proj-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-  }
-
-  .proj-horizon {
-    font-size: 10px;
-    color: var(--accent);
-    background: rgba(0,212,255,0.1);
-    padding: 2px 6px;
-    border-radius: 2px;
-  }
-
-  .proj-price {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 4px;
-  }
-
-  .proj-direction {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  .proj-tag {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .proj-tag.bull { background: rgba(0,230,118,0.15); color: var(--green); }
-  .proj-tag.bear { background: rgba(255,61,90,0.15); color: var(--red); }
-  .proj-tag.flat { background: rgba(255,214,0,0.15); color: var(--yellow); }
-
-  .proj-confidence-bar {
-    height: 3px;
-    background: var(--dim);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 6px;
-  }
-
-  .proj-confidence-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
-  .proj-reason {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  /* Signals */
-  .signals-panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px 14px;
-  }
-
-  .signals-panel::-webkit-scrollbar { width: 3px; }
-  .signals-panel::-webkit-scrollbar-thumb { background: var(--dim); }
-
-  .signals-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .signal-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .signal-name { font-size: 11px; color: var(--muted); }
-  .signal-val { font-size: 12px; font-weight: 600; }
-
-  .bar-wrap {
-    margin-top: 12px;
-  }
-
-  .bar-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-
-  .bar-track {
-    height: 4px;
-    background: var(--dim);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.4s ease;
-  }
-
-  /* Memory panel */
-  .memory-panel {
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    padding: 10px 14px;
-    flex-shrink: 0;
-  }
-
-  .memory-stats {
-    display: flex;
-    gap: 16px;
-  }
-
-  .mem-stat { text-align: center; }
-  .mem-val { font-size: 15px; font-weight: 700; color: #fff; }
-  .mem-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-
-  /* Mini chart */
-  .mini-chart {
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    height: 70px;
-    position: relative;
-    overflow: hidden;
-    background: var(--panel);
-  }
-
-  #sparkline { width: 100%; height: 100%; }
-
-  /* Scrollbar auto-scroll toggle */
-  .scroll-btn {
-    font-size: 10px;
-    color: var(--muted);
-    cursor: pointer;
-    background: none;
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    border-radius: 2px;
-    font-family: inherit;
-  }
-
-  .scroll-btn:hover { color: var(--text); border-color: var(--dim); }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap');
+
+:root {
+  --bg:     #070b0f;
+  --bg2:    #0c1219;
+  --panel:  #0f1820;
+  --border: #182232;
+  --accent: #00d4ff;
+  --orange: #ff6b35;
+  --green:  #00e676;
+  --red:    #ff3d5a;
+  --yellow: #ffd600;
+  --purple: #b388ff;
+  --text:   #c0d4e8;
+  --muted:  #3d5468;
+  --dim:    #1e2e3e;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { background:var(--bg); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.5; height:100%; overflow:hidden; }
+body { display:flex; flex-direction:column; }
+
+/* HEADER */
+.hdr { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; gap:10px; }
+.hdr-left { display:flex; align-items:center; gap:12px; min-width:0; }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:14px; color:var(--accent); letter-spacing:.06em; white-space:nowrap; }
+.logo span { color:var(--orange); }
+.price-box { display:flex; align-items:baseline; gap:7px; }
+#live-price { font-size:20px; font-weight:700; color:#fff; letter-spacing:-.02em; white-space:nowrap; }
+#price-change { font-size:11px; font-weight:600; white-space:nowrap; }
+.hdr-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.badge { display:flex; align-items:center; gap:4px; padding:3px 7px; border-radius:3px; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; white-space:nowrap; }
+.badge.online  { background:rgba(0,230,118,.1);  color:var(--green);  border:1px solid rgba(0,230,118,.2); }
+.badge.offline { background:rgba(255,61,90,.1);  color:var(--red);    border:1px solid rgba(255,61,90,.2); }
+.badge.wait    { background:rgba(255,214,0,.1);  color:var(--yellow); border:1px solid rgba(255,214,0,.2); }
+.dot { width:5px; height:5px; border-radius:50%; background:currentColor; animation:blink 1.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* MAIN GRID */
+.main { flex:1; overflow:hidden; display:grid; grid-template-columns:1fr 310px; }
+
+/* LEFT DASHBOARD */
+.dash { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); }
+
+.spark-wrap { height:70px; flex-shrink:0; background:var(--panel); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+#sparkline { width:100%; height:100%; display:block; }
+.spark-range { position:absolute; right:8px; bottom:5px; font-size:9px; color:var(--muted); }
+
+.metric-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border-bottom:1px solid var(--border); flex-shrink:0; }
+.mc { background:var(--panel); padding:8px 10px; }
+.mc-l { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:3px; }
+.mc-v { font-size:14px; font-weight:700; color:#fff; }
+.mc-s { font-size:9px; color:var(--muted); margin-top:1px; }
+
+.proj-card { background:var(--panel); border-bottom:1px solid var(--border); padding:12px 14px; flex-shrink:0; }
+.proj-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.proj-title { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
+.proj-hz { font-size:10px; color:var(--accent); background:rgba(0,212,255,.1); padding:2px 7px; border-radius:3px; }
+.proj-main { display:flex; align-items:flex-end; gap:12px; margin-bottom:6px; }
+#proj-price { font-size:24px; font-weight:700; letter-spacing:-.02em; color:var(--muted); }
+.proj-dir-block { display:flex; flex-direction:column; gap:4px; }
+.proj-tag { font-size:10px; font-weight:700; padding:2px 8px; border-radius:2px; text-transform:uppercase; letter-spacing:.06em; width:fit-content; }
+.proj-tag.bull { background:rgba(0,230,118,.15); color:var(--green); }
+.proj-tag.bear { background:rgba(255,61,90,.15);  color:var(--red); }
+.proj-tag.flat { background:rgba(255,214,0,.15);  color:var(--yellow); }
+#proj-range { font-size:10px; color:var(--muted); }
+.conf-bar { height:3px; background:var(--dim); border-radius:2px; overflow:hidden; margin-bottom:6px; }
+.conf-fill { height:100%; border-radius:2px; transition:width .5s, background .4s; }
+.proj-why { font-size:11px; color:var(--muted); line-height:1.65; }
+
+.signals { flex:1; overflow-y:auto; padding:10px 14px; }
+.signals::-webkit-scrollbar { width:3px; }
+.signals::-webkit-scrollbar-thumb { background:var(--dim); }
+.sig-title { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:8px; }
+.sig-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+.sig-name { font-size:11px; color:var(--muted); }
+.sig-val  { font-size:12px; font-weight:600; }
+.gauge-block { margin-top:10px; }
+.gauge-lbl { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-bottom:3px; }
+.gauge-track { height:4px; background:var(--dim); border-radius:2px; overflow:hidden; margin-bottom:7px; }
+.gauge-fill { height:100%; border-radius:2px; transition:width .4s, background .4s; }
+
+.mem-footer { background:var(--bg2); border-top:1px solid var(--border); padding:8px 14px; flex-shrink:0; }
+.mem-title { font-family:'Syne',sans-serif; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:6px; }
+.mem-stats { display:flex; gap:14px; }
+.mem-st { text-align:center; }
+.mem-v { font-size:14px; font-weight:700; color:#fff; }
+.mem-l { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+
+/* RIGHT COL */
+.right-col { display:flex; flex-direction:column; overflow:hidden; background:var(--bg2); }
+
+.cvd-panel { flex:1; overflow:hidden; display:flex; flex-direction:column; padding:12px 14px; border-bottom:1px solid var(--border); }
+.cvd-title { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:8px; }
+#cvd-canvas { flex:1; display:block; width:100%; border-radius:3px; min-height:80px; }
+.cvd-stats { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:8px; }
+.cvd-sc { background:var(--panel); border-radius:3px; padding:6px 9px; }
+.cvd-sl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px; }
+.cvd-sv { font-size:13px; font-weight:700; }
+
+.noise-panel { padding:12px 14px; flex-shrink:0; }
+.noise-title { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:8px; }
+.noise-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+.noise-name { font-size:11px; color:var(--muted); }
+.noise-val  { font-size:12px; font-weight:600; }
+
+/* LOG FAB */
+#log-fab { position:fixed; bottom:18px; right:18px; z-index:100; width:52px; height:52px; border-radius:50%; background:var(--accent); color:#000; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:19px; box-shadow:0 4px 20px rgba(0,212,255,.35); transition:transform .15s, box-shadow .15s, background .3s; }
+#log-fab:hover { transform:scale(1.08); box-shadow:0 6px 26px rgba(0,212,255,.5); }
+#log-fab:active { transform:scale(.94); }
+.fab-badge { position:absolute; top:-3px; right:-3px; background:var(--orange); color:#fff; font-size:9px; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:none; align-items:center; justify-content:center; padding:0 3px; }
+
+/* LOG OVERLAY */
+#log-overlay { position:fixed; inset:0; z-index:200; background:rgba(7,11,15,.85); backdrop-filter:blur(8px); display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity .22s; }
+#log-overlay.open { opacity:1; pointer-events:all; }
+.log-sheet { position:absolute; left:0; right:0; bottom:0; height:88%; background:var(--bg2); border-top:1px solid var(--border); border-radius:16px 16px 0 0; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .28s cubic-bezier(.25,.8,.25,1); }
+#log-overlay.open .log-sheet { transform:translateY(0); }
+.log-drag { width:36px; height:4px; border-radius:2px; background:var(--dim); margin:8px auto 0; flex-shrink:0; }
+.log-sheet-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 16px 10px; border-bottom:1px solid var(--border); flex-shrink:0; gap:8px; }
+.log-sheet-title { font-family:'Syne',sans-serif; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); white-space:nowrap; }
+.log-controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.log-filter { display:flex; gap:3px; }
+.filter-btn { font-size:9px; font-weight:700; text-transform:uppercase; padding:2px 7px; border-radius:3px; cursor:pointer; border:1px solid var(--border); background:none; color:var(--muted); font-family:inherit; letter-spacing:.07em; transition:all .15s; }
+.filter-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.08); }
+.close-btn { background:var(--dim); border:none; color:var(--text); width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.close-btn:hover { background:var(--border); }
+#log-container { flex:1; overflow-y:auto; padding:5px 0; }
+#log-container::-webkit-scrollbar { width:3px; }
+#log-container::-webkit-scrollbar-thumb { background:var(--dim); border-radius:2px; }
+.log-entry { display:flex; gap:8px; padding:5px 16px; border-left:2px solid transparent; }
+.log-entry.hidden { display:none; }
+.log-entry:hover { background:rgba(255,255,255,.02); }
+.log-entry.analysis   { border-left-color:var(--accent);  background:rgba(0,212,255,.025); }
+.log-entry.prediction { border-left-color:var(--yellow);  background:rgba(255,214,0,.025); }
+.log-entry.evaluation { border-left-color:var(--purple);  background:rgba(179,136,255,.03); }
+.log-entry.absorption { border-left-color:var(--orange);  background:rgba(255,107,53,.03); }
+.log-entry.spike      { border-left-color:var(--red);     background:rgba(255,61,90,.03); }
+.log-entry.learn      { border-left-color:var(--green);   background:rgba(0,230,118,.025); }
+.log-entry.system     { border-left-color:var(--dim); }
+.log-entry.warn       { border-left-color:var(--yellow);  background:rgba(255,214,0,.025); }
+.log-time { color:var(--muted); font-size:10px; white-space:nowrap; margin-top:1px; min-width:60px; }
+.log-icon { font-size:11px; min-width:14px; text-align:center; }
+.log-body { flex:1; min-width:0; }
+.log-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; margin-bottom:1px; }
+.log-entry.analysis   .log-label { color:var(--accent); }
+.log-entry.prediction .log-label { color:var(--yellow); }
+.log-entry.evaluation .log-label { color:var(--purple); }
+.log-entry.absorption .log-label { color:var(--orange); }
+.log-entry.spike      .log-label { color:var(--red); }
+.log-entry.learn      .log-label { color:var(--green); }
+.log-entry.system     .log-label { color:var(--muted); }
+.log-entry.warn       .log-label { color:var(--yellow); }
+.log-msg { color:var(--text); font-size:12px; word-break:break-word; }
+.log-msg .g { color:var(--green);  font-weight:600; }
+.log-msg .r { color:var(--red);    font-weight:600; }
+.log-msg .y { color:var(--yellow); }
+.log-msg .a { color:var(--accent); }
+.log-msg .p { color:var(--purple); }
+.log-msg .o { color:var(--orange); }
+.log-msg .d { color:var(--muted); }
+.log-sheet-footer { padding:8px 16px 14px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+#log-count-lbl { font-size:10px; color:var(--muted); }
+.autoscroll-btn { font-size:10px; color:var(--muted); background:none; border:1px solid var(--border); padding:3px 9px; border-radius:3px; font-family:inherit; cursor:pointer; }
+
+/* RESPONSIVE */
+@media(max-width:680px) {
+  .main { grid-template-columns:1fr; }
+  .right-col { display:none; }
+  .metric-strip { grid-template-columns:repeat(2,1fr); }
+  #live-price { font-size:17px; }
+}
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-  <div class="header-left">
+<div class="hdr">
+  <div class="hdr-left">
     <div class="logo">BTC<span>·</span>AI</div>
-    <div class="price-display">
+    <div class="price-box">
       <div id="live-price">$—</div>
       <div id="price-change" style="color:var(--muted)">—</div>
     </div>
   </div>
-  <div class="status-row">
-    <div id="ws-badge" class="badge offline"><div class="dot"></div>Connecting</div>
-    <div id="ai-badge" class="badge learning"><div class="dot"></div>AI Active</div>
-    <div id="ai-confidence" style="color:var(--muted)">Confidence: —</div>
+  <div class="hdr-right">
+    <div id="ws-badge" class="badge wait"><div class="dot"></div>Connecting</div>
+    <div class="badge online"><div class="dot"></div>AI Live</div>
   </div>
 </div>
 
-<!-- Main -->
 <div class="main">
-
-  <!-- Left: Log -->
-  <div class="log-panel">
-    <div class="panel-header">
-      <span class="panel-title">Intelligence Log</span>
-      <button class="scroll-btn" id="scroll-btn" onclick="toggleAutoScroll()">Auto-scroll ON</button>
+  <div class="dash">
+    <div class="spark-wrap">
+      <canvas id="sparkline"></canvas>
+      <div class="spark-range" id="spark-range">—</div>
     </div>
-    <div id="log-container"></div>
+    <div class="metric-strip">
+      <div class="mc"><div class="mc-l">CVD 60s</div><div class="mc-v" id="m-cvd">—</div><div class="mc-s">vol delta BTC</div></div>
+      <div class="mc"><div class="mc-l">Trade Freq</div><div class="mc-v" id="m-freq">—</div><div class="mc-s">trades/min</div></div>
+      <div class="mc"><div class="mc-l">VWAP Δ</div><div class="mc-v" id="m-vwap">—</div><div class="mc-s">vs session vwap</div></div>
+      <div class="mc"><div class="mc-l">ATR 1m</div><div class="mc-v" id="m-atr">—</div><div class="mc-s">volatility</div></div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-top">
+        <span class="proj-title">AI Projection</span>
+        <span class="proj-hz" id="proj-hz">warmup…</span>
+      </div>
+      <div class="proj-main">
+        <div id="proj-price">Awaiting signal…</div>
+        <div class="proj-dir-block">
+          <span class="proj-tag flat" id="proj-tag">NEUTRAL</span>
+          <span id="proj-range" style="font-size:10px;color:var(--muted)">—</span>
+        </div>
+      </div>
+      <div class="conf-bar"><div class="conf-fill" id="conf-fill" style="width:0%;background:var(--muted)"></div></div>
+      <div class="proj-why" id="proj-why">AI is accumulating market data…</div>
+    </div>
+    <div class="signals">
+      <div class="sig-title">Market Signals</div>
+      <div class="sig-row"><span class="sig-name">CVD Trend</span><span class="sig-val" id="sig-cvdt" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">Momentum</span><span class="sig-val" id="sig-mom" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">5m Trend</span><span class="sig-val" id="sig-trend" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">Absorption</span><span class="sig-val" id="sig-abs" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">Aggression Idx</span><span class="sig-val" id="sig-aggr" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">Spike Risk</span><span class="sig-val" id="sig-spike" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">Whale Activity</span><span class="sig-val" id="sig-whale" style="color:var(--muted)">—</span></div>
+      <div class="sig-row"><span class="sig-name">Market Phase</span><span class="sig-val" id="sig-phase" style="color:var(--accent)">—</span></div>
+      <div class="gauge-block">
+        <div class="gauge-lbl"><span>Bear</span><span>Sentiment</span><span>Bull</span></div>
+        <div class="gauge-track"><div class="gauge-fill" id="g-sent" style="width:50%;background:var(--muted)"></div></div>
+        <div class="gauge-lbl"><span>Noise</span><span>Signal Quality</span><span>Clean</span></div>
+        <div class="gauge-track"><div class="gauge-fill" id="g-qual" style="width:0%;background:var(--accent)"></div></div>
+        <div class="gauge-lbl"><span>Cold</span><span>AI Experience</span><span>Expert</span></div>
+        <div class="gauge-track"><div class="gauge-fill" id="g-exp" style="width:0%;background:var(--purple)"></div></div>
+      </div>
+    </div>
+    <div class="mem-footer">
+      <div class="mem-title">AI Brain</div>
+      <div class="mem-stats">
+        <div class="mem-st"><div class="mem-v" id="mem-exp">0</div><div class="mem-l">Exp</div></div>
+        <div class="mem-st"><div class="mem-v" id="mem-pred">0</div><div class="mem-l">Pred</div></div>
+        <div class="mem-st"><div class="mem-v" id="mem-acc" style="color:var(--green)">—</div><div class="mem-l">Acc</div></div>
+        <div class="mem-st"><div class="mem-v" id="mem-filtered">0</div><div class="mem-l">Filtered</div></div>
+        <div class="mem-st"><div class="mem-v" id="mem-skip">0</div><div class="mem-l">Skipped</div></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Right: Dashboard -->
-  <div class="right-panel">
-
-    <!-- Sparkline -->
-    <div class="mini-chart">
-      <canvas id="sparkline"></canvas>
-    </div>
-
-    <!-- Metrics -->
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-label">Buy Pressure</div>
-        <div class="metric-value" id="m-buy">—</div>
-        <div class="metric-sub" id="m-buy-sub">vol ratio</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Trade Freq</div>
-        <div class="metric-value" id="m-freq">—</div>
-        <div class="metric-sub">trades/min</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Order Imbalance</div>
-        <div class="metric-value" id="m-imb">—</div>
-        <div class="metric-sub" id="m-imb-sub">bid vs ask</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Volatility</div>
-        <div class="metric-value" id="m-vol">—</div>
-        <div class="metric-sub">1m ATR %</div>
+  <div class="right-col">
+    <div class="cvd-panel">
+      <div class="cvd-title">Cumulative Volume Delta (5min)</div>
+      <canvas id="cvd-canvas"></canvas>
+      <div class="cvd-stats">
+        <div class="cvd-sc"><div class="cvd-sl">60s CVD</div><div class="cvd-sv" id="cvd-60s">—</div></div>
+        <div class="cvd-sc"><div class="cvd-sl">CVD Slope</div><div class="cvd-sv" id="cvd-slope">—</div></div>
+        <div class="cvd-sc"><div class="cvd-sl">Buy Vol 60s</div><div class="cvd-sv" id="cvd-buy" style="color:var(--green)">—</div></div>
+        <div class="cvd-sc"><div class="cvd-sl">Sell Vol 60s</div><div class="cvd-sv" id="cvd-sell" style="color:var(--red)">—</div></div>
       </div>
     </div>
-
-    <!-- Projection -->
-    <div class="projection-card">
-      <div class="proj-header">
-        <span class="proj-title">AI Projection</span>
-        <span class="proj-horizon" id="proj-horizon">—</span>
-      </div>
-      <div class="proj-price" id="proj-price" style="color:var(--muted)">Awaiting data...</div>
-      <div class="proj-direction">
-        <span class="proj-tag flat" id="proj-tag">NEUTRAL</span>
-        <span style="font-size:11px;color:var(--muted)" id="proj-range">—</span>
-      </div>
-      <div class="proj-confidence-bar">
-        <div class="proj-confidence-fill" id="proj-conf-bar" style="width:0%;background:var(--muted)"></div>
-      </div>
-      <div class="proj-reason" id="proj-reason">AI is calibrating market state...</div>
+    <div class="noise-panel">
+      <div class="noise-title">Noise Gate Filter</div>
+      <div class="noise-row"><span class="noise-name">Min threshold</span><span class="noise-val" id="nf-thresh">—</span></div>
+      <div class="noise-row"><span class="noise-name">Expected move</span><span class="noise-val" id="nf-exp">—</span></div>
+      <div class="noise-row"><span class="noise-name">Signal score</span><span class="noise-val" id="nf-score">—</span></div>
+      <div class="noise-row"><span class="noise-name">Last decision</span><span class="noise-val" id="nf-dec" style="color:var(--muted)">—</span></div>
+      <div class="noise-row"><span class="noise-name">Total skipped</span><span class="noise-val" id="nf-skip">0</span></div>
     </div>
+  </div>
+</div>
 
-    <!-- Signals -->
-    <div class="signals-panel">
-      <div class="signals-title">Market Signals</div>
+<button id="log-fab" onclick="openLog()">
+  📋
+  <div class="fab-badge" id="fab-badge">0</div>
+</button>
 
-      <div class="signal-item">
-        <span class="signal-name">Momentum</span>
-        <span class="signal-val" id="sig-mom" style="color:var(--muted)">—</span>
-      </div>
-      <div class="signal-item">
-        <span class="signal-name">Trend Strength</span>
-        <span class="signal-val" id="sig-trend" style="color:var(--muted)">—</span>
-      </div>
-      <div class="signal-item">
-        <span class="signal-name">Absorption Signal</span>
-        <span class="signal-val" id="sig-abs" style="color:var(--muted)">—</span>
-      </div>
-      <div class="signal-item">
-        <span class="signal-name">Spike Risk</span>
-        <span class="signal-val" id="sig-spike" style="color:var(--muted)">—</span>
-      </div>
-      <div class="signal-item">
-        <span class="signal-name">Market Phase</span>
-        <span class="signal-val" id="sig-phase" style="color:var(--muted)">—</span>
-      </div>
-      <div class="signal-item">
-        <span class="signal-name">Big Trade Activity</span>
-        <span class="signal-val" id="sig-whale" style="color:var(--muted)">—</span>
-      </div>
-
-      <div class="bar-wrap">
-        <div class="bar-label"><span>Bear</span><span>Sentiment</span><span>Bull</span></div>
-        <div class="bar-track">
-          <div class="bar-fill" id="bar-sentiment" style="width:50%;background:var(--muted)"></div>
+<div id="log-overlay" onclick="overlayClick(event)">
+  <div class="log-sheet">
+    <div class="log-drag"></div>
+    <div class="log-sheet-hdr">
+      <span class="log-sheet-title">Intelligence Log</span>
+      <div class="log-controls">
+        <div class="log-filter">
+          <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="setFilter('prediction',this)">Pred</button>
+          <button class="filter-btn" onclick="setFilter('evaluation',this)">Eval</button>
+          <button class="filter-btn" onclick="setFilter('learn',this)">Learn</button>
+          <button class="filter-btn" onclick="setFilter('analysis',this)">Signal</button>
         </div>
-        <div class="bar-label"><span>Reactive</span><span>AI Mode</span><span>Proactive</span></div>
-        <div class="bar-track">
-          <div class="bar-fill" id="bar-aimode" style="width:30%;background:var(--accent)"></div>
-        </div>
+        <button class="close-btn" onclick="closeLog()">×</button>
       </div>
     </div>
-
-    <!-- Memory -->
-    <div class="memory-panel">
-      <div class="signals-title" style="margin-bottom:8px">AI Memory</div>
-      <div class="memory-stats">
-        <div class="mem-stat">
-          <div class="mem-val" id="mem-exp">0</div>
-          <div class="mem-label">Experiences</div>
-        </div>
-        <div class="mem-stat">
-          <div class="mem-val" id="mem-pred">0</div>
-          <div class="mem-label">Predictions</div>
-        </div>
-        <div class="mem-stat">
-          <div class="mem-val" id="mem-acc" style="color:var(--green)">—</div>
-          <div class="mem-label">Accuracy</div>
-        </div>
-        <div class="mem-stat">
-          <div class="mem-val" id="mem-patterns">0</div>
-          <div class="mem-label">Patterns</div>
-        </div>
-      </div>
+    <div id="log-container"></div>
+    <div class="log-sheet-footer">
+      <span id="log-count-lbl">0 entries</span>
+      <button class="autoscroll-btn" id="scroll-btn" onclick="toggleAutoScroll()">Auto-scroll ON</button>
     </div>
-
   </div>
 </div>
 
 <script>
-// ============================================================
-// BTC AI ANALYST — Self-Learning Market Intelligence System
-// No external AI APIs — all intelligence is built from data
-// ============================================================
+'use strict';
 
-// ── Constants & Config ─────────────────────────────────────
-const WS_BASE = 'wss://stream.binance.com:9443/ws';
-const SYMBOL = 'btcusdt';
-const STORAGE_KEY = 'btc_ai_brain_v4';
-const MAX_LOG = 200;
-const ANALYSIS_INTERVAL = 12000;   // deep analysis every 12s
-const PREDICTION_INTERVAL = 60000; // prediction cycle every 60s
+// ══════════════════════════
+// CONFIG
+// ══════════════════════════
+const SYMBOL       = 'btcusdt';
+const WS_BASE      = 'wss://stream.binance.com:9443/ws';
+const STORAGE_KEY  = 'btc_ai_v5';
+const ANALYSIS_MS  = 10000;
+const PRED_MS      = 65000;
+const MAX_LOG      = 300;
+const NOISE_ATR_X  = 1.6;   // expected move must be >= 1.6x ATR
+const MIN_SCORE    = 0.065;  // minimum net signal score
+const MIN_QUALITY  = 0.22;   // minimum data quality
 
-// ── State ───────────────────────────────────────────────────
-let autoScroll = true;
-let logCount = 0;
-
-// Market data buffers
-const state = {
+// ══════════════════════════
+// STATE
+// ══════════════════════════
+const S = {
   price: 0,
-  prevPrice: 0,
-  priceHistory: [],        // {t, p} last 200 prices
-  trades: [],              // last 500 trades {t, p, q, isBuy}
-  candles1m: [],           // last 60 1-min candles
-  candles5m: [],           // last 24 5-min candles
-  orderBook: { bids: [], asks: [] },
+  priceHistory: [],
+  aggrWindow: [],   // 60s rolling trades
+  candles1m: [],
+  candles5m: [],
+  cvdHistory: [],   // 5min CVD points
+  vwapNum: 0, vwapDen: 0,
   ticker24h: {},
-  aggrTrades: [],          // aggregated trades buffer (60s window)
-  volumeProfile: {},       // price level → volume map
-  lastDepthUpdate: 0,
-  depthBidVol: 0,
-  depthAskVol: 0,
-  fundingRate: null,
-
-  // Computed metrics (updated each analysis cycle)
+  spread: 0,
   metrics: {
-    buyRatio: 0.5,
-    tradeFreq: 0,
-    orderImbalance: 0,
-    atr1m: 0,
-    momentum: 0,
-    trendStrength: 0,
-    absorptionScore: 0,
-    spikeRisk: 0,
-    whaleActivity: 0,
-    sentiment: 0.5,
-    phase: 'ranging',
+    cvd60s:0, cvdSlope:0, buyVol60s:0, sellVol60s:0,
+    tradeFreq:0, vwapDev:0, atr1m:0,
+    momentum:0, trendStrength:0,
+    absorptionScore:0, spikeRisk:0,
+    whaleActivity:0, aggressionIndex:0,
+    sentiment:0.5, phase:'init', signalQuality:0,
   },
-
-  // Active prediction
-  prediction: null,
-
-  // Reconnect trackers
-  wsStreams: {},
-  wsRetry: {},
+  wsStreams:{}, wsRetry:{},
+  ng:{ threshold:0, expectedMove:0, score:0, decision:'—', skipped:0 },
 };
 
-// ── AI Brain (persistent) ───────────────────────────────────
-let brain = {
-  version: 4,
-  experiences: [],         // past market snapshots + outcomes
-  patterns: {},            // detected pattern signatures
-  weights: {               // dynamic learned weights
-    momentum: 0.20,
-    orderImbalance: 0.18,
-    buyRatio: 0.15,
-    atr: 0.10,
-    absorption: 0.15,
-    whale: 0.12,
-    trend: 0.10,
+// ══════════════════════════
+// BRAIN
+// ══════════════════════════
+let B = {
+  version:5,
+  experiences:[], predictions:[],
+  accuracy:{ total:0, correct:0 },
+  weights:{
+    cvdSlope:0.23, momentum:0.18, buyRatio:0.14,
+    absorption:0.14, aggressionIndex:0.13,
+    trendStrength:0.10, whale:0.08,
   },
-  predictions: [],         // history of predictions + evaluations
-  accuracy: { total: 0, correct: 0, directional: 0 },
-  calibration: {           // self-calibration params
-    spikeThreshold: 0.003,
-    absorptionThreshold: 0.6,
-    momentumWindow: 20,
-    confidenceBoost: 1.0,
+  calibration:{
+    confidenceBoost:1.0, absorptionThreshold:0.55,
+    spikeThreshold:0.60, momentumWindow:25,
   },
-  lastSaved: 0,
+  stats:{ noiseFiltered:0 },
 };
 
-// Load from localStorage
 function loadBrain() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      if (saved.version === brain.version) {
-        brain = { ...brain, ...saved };
-        log('system', '💾', 'MEMORY', `Brain loaded — ${brain.experiences.length} experiences, ${brain.predictions.length} predictions, accuracy ${accStr()}`);
-      } else {
-        log('system', '🔄', 'MEMORY', `Version mismatch — starting fresh brain (v${brain.version})`);
-      }
-    } else {
-      log('system', '🧠', 'MEMORY', 'No prior memory found — AI starting cold');
-    }
-  } catch(e) {
-    log('system', '⚠️', 'MEMORY', 'Brain load failed — ' + e.message);
-  }
+    if (!raw) { log('system','🧠','BRAIN','Cold start — no prior memory'); return; }
+    const sv = JSON.parse(raw);
+    if (sv.version !== B.version) { log('system','🔄','BRAIN','Schema v'+sv.version+'→v'+B.version+' — fresh start'); return; }
+    B = { ...B, ...sv };
+    log('system','💾','BRAIN',
+      `Loaded — <span class="a">${B.experiences.length}</span> exp | ` +
+      `acc <span class="g">${accStr()}</span> | ` +
+      `noise filtered: <span class="y">${B.stats.noiseFiltered}</span>`);
+  } catch(e) { log('warn','⚠️','BRAIN','Load failed: '+e.message); }
 }
 
 function saveBrain() {
   try {
-    // Keep memories lean — cap at 500 experiences, 200 predictions
-    if (brain.experiences.length > 500) brain.experiences = brain.experiences.slice(-500);
-    if (brain.predictions.length > 200) brain.predictions = brain.predictions.slice(-200);
-    brain.lastSaved = Date.now();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(brain));
-  } catch(e) {
-    log('warn', '⚠️', 'STORAGE', 'Save failed: ' + e.message);
-  }
+    if (B.experiences.length > 600) B.experiences = B.experiences.slice(-600);
+    if (B.predictions.length > 300) B.predictions = B.predictions.slice(-300);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(B));
+  } catch(e) {}
 }
 
-function accStr() {
-  if (!brain.accuracy.total) return '—';
-  return ((brain.accuracy.correct / brain.accuracy.total) * 100).toFixed(1) + '%';
-}
+const accStr = () => B.accuracy.total ? ((B.accuracy.correct/B.accuracy.total)*100).toFixed(1)+'%' : '—';
 
-// ── WebSocket Management ─────────────────────────────────────
-function createStream(name, path, onMsg) {
-  if (state.wsStreams[name]) {
-    try { state.wsStreams[name].close(); } catch(e) {}
-  }
-  if (!state.wsRetry[name]) state.wsRetry[name] = { delay: 1000, attempts: 0 };
-
+// ══════════════════════════
+// WEBSOCKET
+// ══════════════════════════
+function openWS(name, path, onMsg) {
+  if (S.wsStreams[name]) { try { S.wsStreams[name].close(); } catch(e){} }
+  if (!S.wsRetry[name]) S.wsRetry[name] = { delay:1200, tries:0 };
   const ws = new WebSocket(`${WS_BASE}/${path}`);
-  state.wsStreams[name] = ws;
-
+  S.wsStreams[name] = ws;
   ws.onopen = () => {
-    state.wsRetry[name].delay = 1000;
-    state.wsRetry[name].attempts = 0;
-    if (name === 'trade') {
-      setBadge('online', 'Connected');
-      log('system', '🔗', 'SYSTEM', `WebSocket [${name}] connected`);
-    }
+    S.wsRetry[name].delay = 1200; S.wsRetry[name].tries = 0;
+    if (name==='trade') setWsBadge('online','Live');
   };
-
-  ws.onmessage = (e) => {
-    try { onMsg(JSON.parse(e.data)); } catch(err) {}
-  };
-
+  ws.onmessage = e => { try { onMsg(JSON.parse(e.data)); } catch(_){} };
   ws.onerror = () => {};
-
   ws.onclose = () => {
-    const r = state.wsRetry[name];
-    r.attempts++;
-    if (name === 'trade') setBadge('offline', `Reconnecting (${r.attempts})`);
-    log('warn', '⚡', 'WS', `[${name}] disconnected — retry in ${(r.delay/1000).toFixed(1)}s`);
-    setTimeout(() => createStream(name, path, onMsg), r.delay);
-    r.delay = Math.min(r.delay * 1.5, 30000);
+    const r = S.wsRetry[name]; r.tries++;
+    if (name==='trade') setWsBadge('offline',`Retry #${r.tries}`);
+    log('warn','⚡','WS',`[${name}] lost — reconnect in ${(r.delay/1000).toFixed(1)}s`);
+    setTimeout(() => openWS(name, path, onMsg), r.delay);
+    r.delay = Math.min(r.delay*1.6, 32000);
   };
-
-  return ws;
 }
 
-function setBadge(state_, label) {
+function setWsBadge(cls, txt) {
   const el = document.getElementById('ws-badge');
-  el.className = 'badge ' + state_;
-  el.innerHTML = `<div class="dot"></div>${label}`;
+  el.className = 'badge '+cls;
+  el.innerHTML = `<div class="dot"></div>${txt}`;
 }
 
-// ── WebSocket Streams ────────────────────────────────────────
 function initStreams() {
-  // 1. Aggregate trades
-  createStream('trade', `${SYMBOL}@aggTrade`, onAggrTrade);
-
-  // 2. 1m klines
-  createStream('kline1m', `${SYMBOL}@kline_1m`, onKline1m);
-
-  // 3. 5m klines
-  createStream('kline5m', `${SYMBOL}@kline_5m`, onKline5m);
-
-  // 4. Depth (order book top 20)
-  createStream('depth', `${SYMBOL}@depth20@100ms`, onDepth);
-
-  // 5. 24h mini ticker
-  createStream('ticker', `${SYMBOL}@miniTicker`, onTicker);
+  openWS('trade',  `${SYMBOL}@aggTrade`,     onTrade);
+  openWS('k1m',    `${SYMBOL}@kline_1m`,     onKline1m);
+  openWS('k5m',    `${SYMBOL}@kline_5m`,     onKline5m);
+  openWS('ticker', `${SYMBOL}@miniTicker`,   onTicker);
+  openWS('depth',  `${SYMBOL}@depth5@500ms`, onDepth);
 }
 
-function onAggrTrade(d) {
-  const price = parseFloat(d.p);
-  const qty = parseFloat(d.q);
-  const isBuy = !d.m; // maker = sell side, so !m = buy
-
-  state.prevPrice = state.price;
-  state.price = price;
-
-  // Price history (keep 200)
-  state.priceHistory.push({ t: d.T, p: price });
-  if (state.priceHistory.length > 200) state.priceHistory.shift();
-
-  // Trade buffer (keep 500)
-  state.trades.push({ t: d.T, p: price, q: qty, isBuy });
-  if (state.trades.length > 500) state.trades.shift();
-
-  // Aggr trades 60s window
-  const now = Date.now();
-  state.aggrTrades.push({ t: now, p: price, q: qty, isBuy });
-  state.aggrTrades = state.aggrTrades.filter(x => now - x.t < 60000);
-
-  // Volume profile
-  const bucket = Math.round(price / 50) * 50;
-  state.volumeProfile[bucket] = (state.volumeProfile[bucket] || 0) + qty;
-
-  // Update UI price
+// ══════════════════════════
+// STREAM HANDLERS
+// ══════════════════════════
+function onTrade(d) {
+  const p=+d.p, q=+d.q, isBuy=!d.m, now=d.T||Date.now();
+  S.price = p;
+  S.priceHistory.push({t:now,p});
+  if (S.priceHistory.length>300) S.priceHistory.shift();
+  S.aggrWindow.push({t:now,p,q,isBuy});
+  const cut = now-60000;
+  while(S.aggrWindow.length && S.aggrWindow[0].t<cut) S.aggrWindow.shift();
+  S.vwapNum += p*q; S.vwapDen += q;
   updatePriceDisplay();
   updateSparkline();
 }
 
 function onKline1m(d) {
-  const k = d.k;
-  const candle = {
-    t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c,
-    v: +k.v, n: k.n, closed: k.x,
-    buyVol: +k.V, takerRatio: +k.V / +k.v,
-  };
-  const last = state.candles1m[state.candles1m.length - 1];
-  if (last && last.t === candle.t) {
-    state.candles1m[state.candles1m.length - 1] = candle;
-  } else {
-    state.candles1m.push(candle);
-    if (state.candles1m.length > 60) state.candles1m.shift();
-  }
+  const k=d.k, c={t:k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v,bv:+k.V,n:k.n};
+  const last=S.candles1m[S.candles1m.length-1];
+  if(last&&last.t===c.t) S.candles1m[S.candles1m.length-1]=c;
+  else { S.candles1m.push(c); if(S.candles1m.length>60) S.candles1m.shift(); }
 }
 
 function onKline5m(d) {
-  const k = d.k;
-  const candle = {
-    t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c,
-    v: +k.v, n: k.n, closed: k.x,
-    buyVol: +k.V, takerRatio: +k.V / +k.v,
-  };
-  const last = state.candles5m[state.candles5m.length - 1];
-  if (last && last.t === candle.t) {
-    state.candles5m[state.candles5m.length - 1] = candle;
-  } else {
-    state.candles5m.push(candle);
-    if (state.candles5m.length > 24) state.candles5m.shift();
-  }
+  const k=d.k, c={t:k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v,bv:+k.V};
+  const last=S.candles5m[S.candles5m.length-1];
+  if(last&&last.t===c.t) S.candles5m[S.candles5m.length-1]=c;
+  else { S.candles5m.push(c); if(S.candles5m.length>30) S.candles5m.shift(); }
 }
+
+function onTicker(d) { S.ticker24h={o:+d.o,h:+d.h,l:+d.l}; }
 
 function onDepth(d) {
-  // Compute bid/ask volume top 10 levels
-  let bidVol = 0, askVol = 0;
-  const bids = d.bids.slice(0, 10);
-  const asks = d.asks.slice(0, 10);
-  bids.forEach(([p,q]) => bidVol += parseFloat(q));
-  asks.forEach(([p,q]) => askVol += parseFloat(q));
-  state.depthBidVol = bidVol;
-  state.depthAskVol = askVol;
-  state.orderBook = {
-    bids: bids.map(([p,q]) => ({ p: +p, q: +q })),
-    asks: asks.map(([p,q]) => ({ p: +p, q: +q })),
-  };
-  state.lastDepthUpdate = Date.now();
+  if(d.bids?.length&&d.asks?.length) S.spread=+d.asks[0][0]-+d.bids[0][0];
 }
 
-function onTicker(d) {
-  state.ticker24h = {
-    open: +d.o, high: +d.h, low: +d.l, close: +d.c,
-    volume: +d.v, quoteVolume: +d.q,
-  };
-}
-
-// ── Price Display ────────────────────────────────────────────
+// ══════════════════════════
+// DISPLAY
+// ══════════════════════════
 function updatePriceDisplay() {
-  const el = document.getElementById('live-price');
-  const chEl = document.getElementById('price-change');
-  el.textContent = '$' + state.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  if (state.ticker24h.open) {
-    const pct = ((state.price - state.ticker24h.open) / state.ticker24h.open) * 100;
-    chEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    chEl.style.color = pct >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('live-price').textContent =
+    '$'+S.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(S.ticker24h.o) {
+    const pct=((S.price-S.ticker24h.o)/S.ticker24h.o)*100;
+    const el=document.getElementById('price-change');
+    el.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+    el.style.color=pct>=0?'var(--green)':'var(--red)';
   }
 }
 
-// ── Sparkline Canvas ─────────────────────────────────────────
-let sparkData = [];
+let sparkBuf=[];
 function updateSparkline() {
-  sparkData.push(state.price);
-  if (sparkData.length > 120) sparkData.shift();
-
-  const canvas = document.getElementById('sparkline');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-  const W = canvas.width, H = canvas.height;
-
-  if (sparkData.length < 2) return;
-
-  const mn = Math.min(...sparkData), mx = Math.max(...sparkData);
-  const range = mx - mn || 1;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  const isUp = sparkData[sparkData.length-1] >= sparkData[0];
-  grad.addColorStop(0, isUp ? 'rgba(0,230,118,0.2)' : 'rgba(255,61,90,0.2)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-
+  sparkBuf.push(S.price);
+  if(sparkBuf.length>150) sparkBuf.shift();
+  const cv=document.getElementById('sparkline');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth; cv.height=cv.offsetHeight;
+  const W=cv.width,H=cv.height;
+  if(sparkBuf.length<2) return;
+  const mn=Math.min(...sparkBuf),mx=Math.max(...sparkBuf),rng=mx-mn||1;
+  const isUp=sparkBuf[sparkBuf.length-1]>=sparkBuf[0];
+  const col=isUp?'#00e676':'#ff3d5a';
+  const px=i=>(i/(sparkBuf.length-1))*W;
+  const py=p=>H-((p-mn)/rng)*(H-8)-4;
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,isUp?'rgba(0,230,118,.16)':'rgba(255,61,90,.16)');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
   ctx.beginPath();
-  sparkData.forEach((p, i) => {
-    const x = (i / (sparkData.length - 1)) * W;
-    const y = H - ((p - mn) / range) * (H - 6) - 3;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Line
+  sparkBuf.forEach((p,i)=>i===0?ctx.moveTo(px(i),py(p)):ctx.lineTo(px(i),py(p)));
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle=grd;ctx.fill();
   ctx.beginPath();
-  sparkData.forEach((p, i) => {
-    const x = (i / (sparkData.length - 1)) * W;
-    const y = H - ((p - mn) / range) * (H - 6) - 3;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.strokeStyle = isUp ? '#00e676' : '#ff3d5a';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  sparkBuf.forEach((p,i)=>i===0?ctx.moveTo(px(i),py(p)):ctx.lineTo(px(i),py(p)));
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+  document.getElementById('spark-range').textContent=`H:${mx.toLocaleString()} L:${mn.toLocaleString()}`;
 }
 
-// ── Core Metric Computation ──────────────────────────────────
+function updateCVDChart() {
+  const pts=S.cvdHistory.slice(-120);
+  const cv=document.getElementById('cvd-canvas');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;
+  const W=cv.width,H=cv.height;
+  if(pts.length<2) return;
+  const vals=pts.map(x=>x.v);
+  const mn=Math.min(...vals,0),mx=Math.max(...vals,0),rng=mx-mn||1;
+  const px=i=>(i/(pts.length-1))*W;
+  const py=v=>H-((v-mn)/rng)*(H-4)-2;
+  const z=py(0);
+  ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,z);ctx.lineTo(W,z);ctx.stroke();
+  const last=vals[vals.length-1];
+  const col=last>=0?'#00e676':'#ff3d5a';
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,last>=0?'rgba(0,230,118,.22)':'rgba(255,61,90,.22)');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();
+  pts.forEach((pt,i)=>i===0?ctx.moveTo(px(i),py(pt.v)):ctx.lineTo(px(i),py(pt.v)));
+  ctx.lineTo(W,z);ctx.lineTo(0,z);ctx.closePath();
+  ctx.fillStyle=grd;ctx.fill();
+  ctx.beginPath();
+  pts.forEach((pt,i)=>i===0?ctx.moveTo(px(i),py(pt.v)):ctx.lineTo(px(i),py(pt.v)));
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+}
+
+// ══════════════════════════
+// METRICS
+// ══════════════════════════
 function computeMetrics() {
-  const m = state.metrics;
-  const now = Date.now();
+  const m=S.metrics, win=S.aggrWindow, now=Date.now();
 
-  // --- Buy/Sell Ratio (last 60s) ---
-  const recent = state.aggrTrades;
-  let buyVol = 0, sellVol = 0;
-  recent.forEach(t => t.isBuy ? buyVol += t.q : sellVol += t.q);
-  const totalVol = buyVol + sellVol || 1;
-  m.buyRatio = buyVol / totalVol;
+  // CVD from real executed trades — THE core signal
+  let bv=0,sv=0;
+  win.forEach(t=>t.isBuy?bv+=t.q:sv+=t.q);
+  m.buyVol60s=bv; m.sellVol60s=sv; m.cvd60s=bv-sv;
 
-  // --- Trade Frequency (per minute) ---
-  m.tradeFreq = recent.length;
+  // Rolling CVD history for slope
+  S.cvdHistory.push({t:now,v:m.cvd60s});
+  const cut5m=now-5*60000;
+  while(S.cvdHistory.length&&S.cvdHistory[0].t<cut5m) S.cvdHistory.shift();
+  m.cvdSlope=S.cvdHistory.length>=5?linearTrend(S.cvdHistory.map(x=>x.v)):0;
 
-  // --- Order Book Imbalance ---
-  const bd = state.depthBidVol, ad = state.depthAskVol;
-  m.orderImbalance = (bd - ad) / (bd + ad + 0.001);
+  m.tradeFreq=win.length;
 
-  // --- ATR (1m candles, last 10) ---
-  const c1m = state.candles1m.slice(-10);
-  if (c1m.length >= 2) {
-    let atrSum = 0;
-    for (let i = 1; i < c1m.length; i++) {
-      const tr = Math.max(
-        c1m[i].h - c1m[i].l,
-        Math.abs(c1m[i].h - c1m[i-1].c),
-        Math.abs(c1m[i].l - c1m[i-1].c)
-      );
-      atrSum += tr;
-    }
-    m.atr1m = (atrSum / (c1m.length - 1)) / (state.price || 1);
+  // VWAP deviation
+  const vwap=S.vwapDen>0?S.vwapNum/S.vwapDen:S.price;
+  m.vwapDev=S.price>0?(S.price-vwap)/vwap:0;
+
+  // ATR (1m)
+  const c1m=S.candles1m.slice(-12);
+  if(c1m.length>=2) {
+    let s=0;
+    for(let i=1;i<c1m.length;i++)
+      s+=Math.max(c1m[i].h-c1m[i].l,Math.abs(c1m[i].h-c1m[i-1].c),Math.abs(c1m[i].l-c1m[i-1].c));
+    m.atr1m=(s/(c1m.length-1))/(S.price||1);
   }
 
-  // --- Momentum (price velocity) ---
-  const ph = state.priceHistory;
-  if (ph.length >= brain.calibration.momentumWindow) {
-    const win = ph.slice(-brain.calibration.momentumWindow);
-    const oldest = win[0].p, newest = win[win.length-1].p;
-    m.momentum = (newest - oldest) / (oldest || 1);
+  // Momentum (price velocity)
+  const ph=S.priceHistory;
+  const mw=Math.min(B.calibration.momentumWindow,ph.length);
+  if(ph.length>=mw) {
+    const sl=ph.slice(-mw);
+    m.momentum=(sl[sl.length-1].p-sl[0].p)/(sl[0].p||1);
   }
 
-  // --- Trend Strength (5m candles linear regression) ---
-  if (state.candles5m.length >= 5) {
-    const closes = state.candles5m.slice(-8).map(c => c.c);
-    m.trendStrength = linearTrend(closes);
-  }
+  // 5m trend (linear regression of closes)
+  if(S.candles5m.length>=5)
+    m.trendStrength=linearTrend(S.candles5m.slice(-10).map(c=>c.c));
 
-  // --- Absorption Detection ---
-  m.absorptionScore = detectAbsorption();
+  // Absorption: high vol + tight price range (candle body/range ratio)
+  m.absorptionScore=computeAbsorption();
 
-  // --- Spike Risk ---
-  m.spikeRisk = detectSpikeRisk();
+  // Aggression: large trades hitting one side
+  m.aggressionIndex=computeAggression();
 
-  // --- Whale Activity ---
-  m.whaleActivity = detectWhaleActivity();
+  // Spike risk
+  m.spikeRisk=computeSpike();
 
-  // --- Overall Sentiment (composite) ---
-  m.sentiment = clamp(
-    0.5 +
-    m.momentum * 5 +
-    m.orderImbalance * 0.3 +
-    (m.buyRatio - 0.5) * 0.6 +
-    m.trendStrength * 2,
-    0, 1
-  );
+  // Whale
+  m.whaleActivity=computeWhale();
 
-  // --- Market Phase ---
-  m.phase = classifyPhase();
+  // Signal quality (independent of signals — measures data richness)
+  const freqQ=clamp(win.length/100,0,1);
+  const atrQ=clamp(m.atr1m/0.002,0,1);
+  const cvdQ=clamp(Math.abs(m.cvd60s)/((bv+sv)*0.4+.001),0,1);
+  m.signalQuality=(freqQ*0.3+atrQ*0.35+cvdQ*0.35);
 
+  // Composite sentiment
+  const cd=clamp(m.cvd60s/((bv+sv)*0.5+.001),-1,1);
+  const md=clamp(m.momentum*200,-1,1);
+  const td=clamp(m.trendStrength*3000,-1,1);
+  const ad=m.aggressionIndex;
+  m.sentiment=clamp(0.5+(cd*0.35+md*0.25+td*0.2+ad*0.2)*0.5,0,1);
+
+  m.phase=classifyPhase(m);
   return m;
 }
 
-function linearTrend(arr) {
-  const n = arr.length;
-  if (n < 2) return 0;
-  const mean = arr.reduce((a,b) => a+b, 0) / n;
-  let num = 0, den = 0;
-  arr.forEach((v, i) => {
-    num += (i - n/2) * (v - mean);
-    den += Math.pow(i - n/2, 2);
+function computeAbsorption() {
+  if(S.candles1m.length<3) return 0;
+  const recent=S.candles1m.slice(-4);
+  const avgV=avg(S.candles1m.slice(-20).map(c=>c.v))||1;
+  let score=0;
+  recent.forEach(c=>{
+    const body=Math.abs(c.c-c.o);
+    const wick=(c.h-c.l)||1;
+    const bRatio=body/wick;
+    const vZ=c.v/avgV;
+    // Absorption pattern: volume spike + small candle body
+    if(vZ>1.4&&bRatio<0.35) score+=(vZ-1)*(1-bRatio);
+    // Tight spread + high volume = institutional absorption
+    if(S.spread<S.price*0.00006&&vZ>1.2) score+=0.12;
   });
-  return den ? (num / den) / (mean || 1) : 0;
+  return clamp(score/4,0,1);
 }
 
-function detectAbsorption() {
-  // Absorption = high volume with small price move (price being "absorbed" by big orders)
-  if (state.candles1m.length < 3) return 0;
-  const recent = state.candles1m.slice(-3);
-  let score = 0;
-  recent.forEach(c => {
-    const bodyPct = Math.abs(c.c - c.o) / (c.h - c.l + 0.001);
-    const volZ = c.v / (avgVolume(state.candles1m.slice(-20)) || 1);
-    // High vol + small body = absorption
-    if (volZ > 1.5 && bodyPct < 0.35) score += (volZ - 1) * (1 - bodyPct);
+function computeAggression() {
+  const win=S.aggrWindow;
+  if(win.length<10) return 0;
+  const meanQ=avg(win.map(t=>t.q));
+  let ba=0,sa=0;
+  win.forEach(t=>{
+    const sz=t.q/meanQ;
+    if(sz>1.5) t.isBuy?ba+=sz:sa+=sz;
   });
-  return clamp(score / 3, 0, 1);
+  const tot=ba+sa+.001;
+  return (ba-sa)/tot; // -1..+1
 }
 
-function detectSpikeRisk() {
-  // Spike risk = rapid momentum build + thin order book + high freq divergence
-  const m = state.metrics;
-  let risk = 0;
-  risk += Math.abs(m.momentum) * 20;           // strong move
-  risk += Math.abs(m.orderImbalance) * 0.4;    // book imbalance
-  if (m.atr1m > 0.001) risk += 0.2;           // elevated volatility
-  if (m.tradeFreq > 200) risk += 0.15;         // high trade frequency
-
-  // Check if recent trades show acceleration
-  const tr = state.aggrTrades;
-  if (tr.length >= 20) {
-    const firstHalf = tr.slice(0, tr.length/2);
-    const secondHalf = tr.slice(tr.length/2);
-    const f1Count = firstHalf.length / (firstHalf[firstHalf.length-1]?.t - firstHalf[0]?.t + 1) * 1000;
-    const f2Count = secondHalf.length / (secondHalf[secondHalf.length-1]?.t - secondHalf[0]?.t + 1) * 1000;
-    if (f2Count > f1Count * 1.4) risk += 0.2;  // accelerating trades
+function computeSpike() {
+  const m=S.metrics;
+  let risk=0;
+  risk+=Math.abs(m.momentum)*25;
+  const win=S.aggrWindow;
+  if(win.length>=20) {
+    const h=Math.floor(win.length/2);
+    const fR=h/Math.max(1,(win[h-1]?.t-win[0]?.t)/1000);
+    const sR=(win.length-h)/Math.max(1,(win[win.length-1]?.t-win[h]?.t)/1000);
+    if(sR>fR*1.5) risk+=0.25;
   }
-
-  return clamp(risk, 0, 1);
+  if(m.atr1m>0.0018) risk+=0.2;
+  // CVD divergence = spike risk (price moving against real flow)
+  if(m.momentum>0.001&&m.cvd60s<0) risk+=0.3;
+  if(m.momentum<-0.001&&m.cvd60s>0) risk+=0.3;
+  return clamp(risk,0,1);
 }
 
-function detectWhaleActivity() {
-  // Whale = trades significantly above mean trade size
-  if (state.aggrTrades.length < 10) return 0;
-  const qtys = state.aggrTrades.map(t => t.q);
-  const mean = qtys.reduce((a,b) => a+b, 0) / qtys.length;
-  const std = Math.sqrt(qtys.reduce((a,b) => a + Math.pow(b-mean,2), 0) / qtys.length);
-  const whaleTrades = qtys.filter(q => q > mean + 2.5 * std);
-  return clamp(whaleTrades.length / (qtys.length * 0.1), 0, 1);
+function computeWhale() {
+  if(S.aggrWindow.length<10) return 0;
+  const qtys=S.aggrWindow.map(t=>t.q);
+  const m=avg(qtys),sd=stdDev(qtys);
+  return clamp(qtys.filter(q=>q>m+2.5*sd).length/(qtys.length*0.08),0,1);
 }
 
-function classifyPhase() {
-  const m = state.metrics;
-  const absM = Math.abs(m.momentum);
-  if (m.absorptionScore > brain.calibration.absorptionThreshold) return 'absorption';
-  if (absM < 0.001 && m.atr1m < 0.0008) return 'compression';
-  if (absM > 0.003 && m.tradeFreq > 150) return 'trending';
-  if (m.spikeRisk > 0.65) return 'volatile';
-  if (absM > 0.0015) return 'momentum';
+function classifyPhase(m) {
+  if(m.absorptionScore>B.calibration.absorptionThreshold) return 'absorption';
+  if(Math.abs(m.momentum)<0.0008&&m.atr1m<0.0007) return 'compression';
+  if(m.spikeRisk>B.calibration.spikeThreshold) return 'volatile';
+  if(Math.abs(m.momentum)>0.003&&m.tradeFreq>100) return 'trending';
+  if(Math.abs(m.momentum)>0.0015) return 'momentum';
   return 'ranging';
 }
 
-function avgVolume(candles) {
-  if (!candles.length) return 1;
-  return candles.reduce((a,b) => a + b.v, 0) / candles.length;
-}
+// ══════════════════════════
+// NOISE-GATED PROJECTION
+// ══════════════════════════
+let noiseSkips=0;
 
-function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
-
-// ── AI Projection Engine ─────────────────────────────────────
 function generateProjection() {
-  if (!state.price || state.priceHistory.length < 20) return null;
-  const m = state.metrics;
+  if(!S.price||S.priceHistory.length<30) return null;
+  const m=S.metrics, w=B.weights;
 
-  // --- Score each signal (learned weights) ---
-  const w = brain.weights;
-  let bullScore = 0;
-  let bearScore = 0;
+  // Score each signal: output in -1..+1 range
+  const cvdSc  = clamp(m.cvdSlope*5000,-1,1);
+  const momSc  = clamp(m.momentum*300,-1,1);
+  const total  = m.buyVol60s+m.sellVol60s+.001;
+  const buySc  = clamp(((m.buyVol60s/total)-0.5)*4,-1,1);
+  // Absorption is a REVERSAL signal
+  const absSc  = m.absorptionScore>B.calibration.absorptionThreshold
+                 ? (m.momentum<0?1:-1)*m.absorptionScore : 0;
+  const aggrSc = m.aggressionIndex;
+  const trSc   = clamp(m.trendStrength*4000,-1,1);
+  const whSc   = m.whaleActivity>0.35?(m.buyVol60s/total>0.5?1:-1)*m.whaleActivity:0;
 
-  // Momentum signal
-  if (m.momentum > 0) bullScore += m.momentum * 50 * w.momentum;
-  else bearScore += Math.abs(m.momentum) * 50 * w.momentum;
+  const netScore =
+    cvdSc  * w.cvdSlope +
+    momSc  * w.momentum +
+    buySc  * w.buyRatio +
+    absSc  * w.absorption +
+    aggrSc * w.aggressionIndex +
+    trSc   * w.trendStrength +
+    whSc   * w.whale;
 
-  // Order imbalance
-  if (m.orderImbalance > 0) bullScore += m.orderImbalance * w.orderImbalance;
-  else bearScore += Math.abs(m.orderImbalance) * w.orderImbalance;
+  const atrDollar  = m.atr1m * S.price;
+  const threshold  = atrDollar * NOISE_ATR_X;
+  const expectedMv = Math.abs(netScore) * atrDollar * 6;
+  const scoreMag   = Math.abs(netScore);
 
-  // Buy ratio
-  if (m.buyRatio > 0.5) bullScore += (m.buyRatio - 0.5) * 2 * w.buyRatio;
-  else bearScore += (0.5 - m.buyRatio) * 2 * w.buyRatio;
+  S.ng = { threshold, expectedMove:expectedMv, score:scoreMag, decision:'—', skipped:noiseSkips };
 
-  // Trend strength
-  if (m.trendStrength > 0) bullScore += m.trendStrength * 10 * w.trend;
-  else bearScore += Math.abs(m.trendStrength) * 10 * w.trend;
-
-  // Absorption (price likely to stabilize or reverse)
-  if (m.absorptionScore > brain.calibration.absorptionThreshold) {
-    const absDir = m.momentum < 0 ? 'bull' : 'bear'; // absorption often reverses
-    if (absDir === 'bull') bullScore += m.absorptionScore * w.absorption;
-    else bearScore += m.absorptionScore * w.absorption;
+  // GATE 1: score too weak
+  if(scoreMag < MIN_SCORE) {
+    S.ng.decision=`SKIP — score ${scoreMag.toFixed(3)} < ${MIN_SCORE}`;
+    noiseSkips++; B.stats.noiseFiltered++;
+    updateNoiseUI();
+    log('system','🔇','NOISE GATE',
+      `Skipped — net score <span class="y">${scoreMag.toFixed(4)}</span> below min <span class="d">${MIN_SCORE}</span>. Insufficient conviction.`);
+    return null;
+  }
+  // GATE 2: move too small vs ATR
+  if(expectedMv < threshold) {
+    S.ng.decision=`SKIP — move $${expectedMv.toFixed(0)} < gate $${threshold.toFixed(0)}`;
+    noiseSkips++; B.stats.noiseFiltered++;
+    updateNoiseUI();
+    log('system','🔇','NOISE GATE',
+      `Skipped — projected move <span class="y">$${expectedMv.toFixed(0)}</span> < ` +
+      `${NOISE_ATR_X}×ATR gate <span class="d">$${threshold.toFixed(0)}</span>. Noise territory.`);
+    return null;
+  }
+  // GATE 3: data quality
+  if(m.signalQuality < MIN_QUALITY) {
+    S.ng.decision=`SKIP — quality ${(m.signalQuality*100).toFixed(0)}%`;
+    noiseSkips++; B.stats.noiseFiltered++;
+    updateNoiseUI();
+    log('system','🔇','NOISE GATE',
+      `Skipped — data quality <span class="y">${(m.signalQuality*100).toFixed(0)}%</span> too low. Need more trade volume.`);
+    return null;
   }
 
-  // Whale impact
-  if (m.whaleActivity > 0.3) {
-    if (m.buyRatio > 0.55) bullScore += m.whaleActivity * w.whale;
-    else bearScore += m.whaleActivity * w.whale;
-  }
+  S.ng.decision=`PASS ✓  $${expectedMv.toFixed(0)} | score ${scoreMag.toFixed(3)}`;
+  updateNoiseUI();
 
-  // Spike risk is directional uncertainty
-  const spikeUncertainty = m.spikeRisk * 0.3;
+  const dir = netScore>0.04?'bull':netScore<-0.04?'bear':'flat';
+  const conf = clamp(scoreMag*2.2*B.calibration.confidenceBoost, 0.1, 0.90);
+  const sign = dir==='bull'?1:dir==='bear'?-1:0;
+  const projMove = expectedMv * sign;
+  const projPrice = S.price + projMove;
+  const buf = atrDollar * 0.65;
+  const horizonMin = m.atr1m>0.002?5:m.atr1m>0.0012?7:10;
 
-  // Net score → direction
-  const netScore = bullScore - bearScore;
-  const rawConfidence = clamp(Math.abs(netScore) * 2, 0.1, 0.92);
-  const confidence = rawConfidence * brain.calibration.confidenceBoost;
-  const direction = netScore > 0.02 ? 'bull' : netScore < -0.02 ? 'bear' : 'flat';
-
-  // --- Price projection ---
-  // Based on ATR and momentum, estimate price move magnitude
-  const atrFactor = m.atr1m * state.price;
-  const momentumFactor = Math.abs(m.momentum) * state.price * 3;
-  const projectedMove = (atrFactor + momentumFactor) * (direction === 'bull' ? 1 : direction === 'bear' ? -1 : 0);
-
-  // Horizon: 5-10 min, shorter if high volatility
-  const horizonMin = m.atr1m > 0.002 ? 5 : m.atr1m > 0.001 ? 7 : 10;
-
-  const projPrice = state.price + projectedMove * (confidence);
-  const rangeHigh = projPrice + atrFactor * 0.8;
-  const rangeLow = projPrice - atrFactor * 0.8;
-
-  // --- Reasoning ---
-  const reasons = buildReasoning(m, direction, netScore, bullScore, bearScore);
-
-  // --- Pattern lookup ---
-  const matchedPattern = findSimilarPattern();
+  const reasons = buildReasons(m, dir, cvdSc, buySc, aggrSc, absSc);
+  const match = matchPattern();
 
   return {
-    id: Date.now(),
-    timestamp: Date.now(),
-    entryPrice: state.price,
-    projPrice: Math.round(projPrice * 100) / 100,
-    rangeHigh: Math.round(rangeHigh * 100) / 100,
-    rangeLow: Math.round(rangeLow * 100) / 100,
-    direction,
-    confidence: clamp(confidence - spikeUncertainty, 0.1, 0.92),
-    horizonMin,
-    reasons,
-    matchedPattern,
-    snapshotMetrics: { ...m },
-    evaluated: false,
+    id:Date.now(), timestamp:Date.now(), entryPrice:S.price,
+    projPrice:Math.round(projPrice*100)/100,
+    rangeHigh:Math.round((projPrice+buf)*100)/100,
+    rangeLow: Math.round((projPrice-buf)*100)/100,
+    dir, conf, horizonMin, reasons, match,
+    snap:{...m}, evaluated:false,
+    netScore, expectedMv, threshold,
   };
 }
 
-function buildReasoning(m, direction, net, bull, bear) {
-  const reasons = [];
-
-  if (Math.abs(m.momentum) > 0.002)
-    reasons.push(`${m.momentum > 0 ? '↑ Bullish' : '↓ Bearish'} momentum: ${(m.momentum * 100).toFixed(3)}%`);
-
-  if (Math.abs(m.orderImbalance) > 0.15)
-    reasons.push(`Order book ${m.orderImbalance > 0 ? 'bid-heavy' : 'ask-heavy'}: imbalance ${(m.orderImbalance * 100).toFixed(1)}%`);
-
-  if (m.buyRatio > 0.58 || m.buyRatio < 0.42)
-    reasons.push(`Taker ${m.buyRatio > 0.5 ? 'buy' : 'sell'} dominant: ${(m.buyRatio * 100).toFixed(1)}% buy ratio`);
-
-  if (m.absorptionScore > 0.4)
-    reasons.push(`Absorption detected (score: ${m.absorptionScore.toFixed(2)}) — ${m.momentum < 0 ? 'sellers' : 'buyers'} being absorbed`);
-
-  if (m.spikeRisk > 0.5)
-    reasons.push(`Spike risk elevated (${(m.spikeRisk * 100).toFixed(0)}%) — move may overshoot`);
-
-  if (m.whaleActivity > 0.4)
-    reasons.push(`Large trade activity detected (whale score: ${m.whaleActivity.toFixed(2)})`);
-
-  if (m.trendStrength && Math.abs(m.trendStrength) > 0.0003)
-    reasons.push(`5m trend: ${m.trendStrength > 0 ? 'upward' : 'downward'} (slope: ${(m.trendStrength * 10000).toFixed(2)})`);
-
-  reasons.push(`Market phase: ${m.phase} | Net score: bull ${bull.toFixed(3)} vs bear ${bear.toFixed(3)}`);
-
-  return reasons;
+function buildReasons(m, dir, cvdSc, buySc, aggrSc, absSc) {
+  const r=[];
+  const total=m.buyVol60s+m.sellVol60s+.001;
+  const buyPct=(m.buyVol60s/total*100).toFixed(1);
+  r.push(`CVD slope ${m.cvdSlope>0?'↑':'↓'} ${(m.cvdSlope*10000).toFixed(2)}/10k — real execution flow`);
+  r.push(`Buy vol ${buyPct}% | CVD delta ${m.cvd60s>=0?'+':''}${m.cvd60s.toFixed(2)} BTC (60s)`);
+  if(Math.abs(aggrSc)>0.12)
+    r.push(`Aggression: ${aggrSc>0?'buyers':'sellers'} hitting market (${(Math.abs(aggrSc)*100).toFixed(0)}%)`);
+  if(absSc!==0)
+    r.push(`Absorption ${(m.absorptionScore*100).toFixed(0)}% — ${m.momentum<0?'sell':'buy'} pressure being absorbed`);
+  if(Math.abs(m.trendStrength)>0.0002)
+    r.push(`5m structure ${m.trendStrength>0?'upward':'downward'} (slope ${(m.trendStrength*10000).toFixed(1)})`);
+  if(Math.abs(m.vwapDev)>0.0005)
+    r.push(`VWAP dev: ${m.vwapDev>0?'above':'below'} by ${(Math.abs(m.vwapDev)*100).toFixed(3)}%`);
+  r.push(`Phase: ${m.phase.toUpperCase()} | Quality: ${(m.signalQuality*100).toFixed(0)}%`);
+  return r;
 }
 
-function findSimilarPattern() {
-  if (!brain.experiences.length) return null;
-  const m = state.metrics;
-  // Find closest experience by metric distance
-  let bestDist = Infinity, bestExp = null;
-  brain.experiences.slice(-100).forEach(exp => {
-    const sm = exp.metrics;
-    if (!sm) return;
-    const dist = Math.abs(sm.buyRatio - m.buyRatio) +
-                 Math.abs(sm.orderImbalance - m.orderImbalance) +
-                 Math.abs(sm.momentum - m.momentum) * 100 +
-                 Math.abs(sm.absorptionScore - m.absorptionScore);
-    if (dist < bestDist) { bestDist = dist; bestExp = exp; }
+function matchPattern() {
+  if(B.experiences.length<5) return null;
+  const m=S.metrics;
+  let best=Infinity,bestExp=null;
+  B.experiences.slice(-150).forEach(e=>{
+    if(!e.snap) return;
+    const d=Math.abs((e.snap.cvdSlope||0)-m.cvdSlope)*8000+
+             Math.abs((e.snap.momentum||0)-m.momentum)*500+
+             Math.abs((e.snap.absorptionScore||0)-m.absorptionScore)+
+             Math.abs((e.snap.aggressionIndex||0)-m.aggressionIndex);
+    if(d<best){best=d;bestExp=e;}
   });
-  if (bestDist < 0.3 && bestExp?.outcome) return { dist: bestDist, outcome: bestExp.outcome };
+  if(best<0.4&&bestExp?.outcome) return {dist:best,outcome:bestExp.outcome};
   return null;
 }
 
-// ── Prediction Evaluation ─────────────────────────────────────
+// ══════════════════════════
+// EVALUATION & LEARNING
+// ══════════════════════════
 function evaluatePredictions() {
-  const now = Date.now();
-  const currentPrice = state.price;
-
-  brain.predictions.forEach(pred => {
-    if (pred.evaluated) return;
-    const age = now - pred.timestamp;
-    if (age < pred.horizonMin * 60 * 1000) return; // not yet time
-
-    // Evaluate
-    const actualMove = currentPrice - pred.entryPrice;
-    const projMove = pred.projPrice - pred.entryPrice;
-    const directionalHit = (actualMove > 0 && pred.direction === 'bull') ||
-                           (actualMove < 0 && pred.direction === 'bear') ||
-                           (Math.abs(actualMove) < pred.entryPrice * 0.001 && pred.direction === 'flat');
-
-    const priceAccuracy = 1 - Math.abs(actualMove - projMove) / (Math.abs(projMove) + 1);
-    const wasInRange = currentPrice >= pred.rangeLow && currentPrice <= pred.rangeHigh;
-
-    pred.evaluated = true;
-    pred.actualPrice = currentPrice;
-    pred.directionalHit = directionalHit;
-    pred.priceAccuracy = Math.max(0, priceAccuracy);
-    pred.wasInRange = wasInRange;
-
-    // Update accuracy stats
-    brain.accuracy.total++;
-    if (directionalHit) brain.accuracy.correct++;
-
-    // Log evaluation
-    const result = directionalHit ? 'CORRECT ✓' : 'WRONG ✗';
-    const priceDiff = (currentPrice - pred.entryPrice).toFixed(2);
-    const projDiff = (pred.projPrice - pred.entryPrice).toFixed(2);
-
-    log('evaluation', '🔬', 'EVAL',
-      `Pred #${pred.id % 10000}: ${result} | ` +
-      `Actual: <span class="${actualMove>=0?'hl-green':'hl-red'}">$${(actualMove>=0?'+':'')}${priceDiff}</span> ` +
-      `vs Projected: <span class="dim">$${(+projDiff>=0?'+':'')}${projDiff}</span> | ` +
-      `Range hit: ${wasInRange ? '<span class="hl-green">YES</span>' : '<span class="hl-red">NO</span>'} | ` +
-      `Overall acc: <span class="hl-accent">${accStr()}</span>`
-    );
-
-    // Learn from this prediction
+  const now=Date.now();
+  B.predictions.forEach(pred=>{
+    if(pred.evaluated) return;
+    if(now-pred.timestamp < pred.horizonMin*60000) return;
+    const actual=S.price;
+    const actualMv=actual-pred.entryPrice;
+    const projMv=pred.projPrice-pred.entryPrice;
+    const dirHit=(actualMv>0&&pred.dir==='bull')||(actualMv<0&&pred.dir==='bear')||
+                 (Math.abs(actualMv)<pred.entryPrice*0.0008&&pred.dir==='flat');
+    const inRange=actual>=pred.rangeLow&&actual<=pred.rangeHigh;
+    pred.evaluated=true;
+    pred.actualPrice=actual;
+    pred.directionalHit=dirHit;
+    pred.inRange=inRange;
+    B.accuracy.total++;
+    if(dirHit) B.accuracy.correct++;
+    const col=dirHit?'g':'r';
+    log('evaluation','🔬','EVAL',
+      `Pred #${pred.id%10000}: <span class="${col}">${dirHit?'CORRECT ✓':'WRONG ✗'}</span> | `+
+      `Actual: <span class="${actualMv>=0?'g':'r'}">${actualMv>=0?'+':''}$${actualMv.toFixed(0)}</span> `+
+      `vs Proj: <span class="d">${projMv>=0?'+':''}$${projMv.toFixed(0)}</span> | `+
+      `Range: ${inRange?'<span class="g">HIT</span>':'<span class="r">MISS</span>'} | `+
+      `Acc: <span class="a">${accStr()}</span>`);
     learnFromPrediction(pred);
-
-    // Store as experience
-    brain.experiences.push({
-      timestamp: pred.timestamp,
-      metrics: pred.snapshotMetrics,
-      direction: pred.direction,
-      outcome: { directionalHit, actualMove: actualMove / pred.entryPrice, priceAccuracy }
-    });
-
+    B.experiences.push({snap:pred.snap,dir:pred.dir,outcome:{directionalHit:dirHit,actualMove:actualMv/pred.entryPrice}});
     saveBrain();
     updateMemoryUI();
   });
 }
 
 function learnFromPrediction(pred) {
-  const m = pred.snapshotMetrics;
-  const hit = pred.directionalHit;
-  const acc = pred.priceAccuracy;
-
-  // Adjust weights based on which signals contributed correctly
-  const lr = 0.03; // learning rate
-  const w = brain.weights;
-
-  // If prediction was right, reinforce the dominant signals
-  // If wrong, attenuate them
-  const sign = hit ? 1 : -1;
-
-  if (Math.abs(m.momentum) > 0.001)
-    w.momentum = clamp(w.momentum + sign * lr * Math.abs(m.momentum) * 100, 0.05, 0.4);
-
-  if (Math.abs(m.orderImbalance) > 0.1)
-    w.orderImbalance = clamp(w.orderImbalance + sign * lr * Math.abs(m.orderImbalance), 0.05, 0.35);
-
-  if (Math.abs(m.buyRatio - 0.5) > 0.05)
-    w.buyRatio = clamp(w.buyRatio + sign * lr * Math.abs(m.buyRatio - 0.5) * 2, 0.05, 0.35);
-
-  if (m.absorptionScore > 0.3)
-    w.absorption = clamp(w.absorption + sign * lr * m.absorptionScore, 0.05, 0.35);
-
-  if (Math.abs(m.trendStrength) > 0.0002)
-    w.trend = clamp(w.trend + sign * lr, 0.05, 0.3);
-
-  if (m.whaleActivity > 0.3)
-    w.whale = clamp(w.whale + sign * lr * m.whaleActivity, 0.03, 0.3);
-
-  // Normalize weights to sum = 1
-  const total = Object.values(w).reduce((a,b) => a+b, 0);
-  Object.keys(w).forEach(k => w[k] = w[k] / total);
-
-  // Adjust calibration
-  const recentAcc = brain.accuracy.total > 5 ? brain.accuracy.correct / brain.accuracy.total : 0.5;
-  brain.calibration.confidenceBoost = clamp(0.7 + recentAcc * 0.5, 0.7, 1.2);
-
-  log('learn', '⚡', 'LEARN',
-    `Weights updated: mom=${w.momentum.toFixed(3)} oi=${w.orderImbalance.toFixed(3)} ` +
-    `br=${w.buyRatio.toFixed(3)} abs=${w.absorption.toFixed(3)} ` +
-    `tr=${w.trend.toFixed(3)} wh=${w.whale.toFixed(3)}`
-  );
+  const sn=pred.snap, hit=pred.directionalHit, lr=0.025, sign=hit?1:-1, w=B.weights;
+  if(Math.abs(sn.cvdSlope||0)>.00001)  w.cvdSlope=clamp(w.cvdSlope+sign*lr*clamp(Math.abs(sn.cvdSlope)*3000,.1,1),.05,.45);
+  if(Math.abs(sn.momentum||0)>.0005)   w.momentum=clamp(w.momentum+sign*lr*clamp(Math.abs(sn.momentum)*200,.1,1),.05,.35);
+  if(Math.abs(sn.aggressionIndex||0)>.1) w.aggressionIndex=clamp(w.aggressionIndex+sign*lr*Math.abs(sn.aggressionIndex),.05,.3);
+  if((sn.absorptionScore||0)>.3)       w.absorption=clamp(w.absorption+sign*lr*sn.absorptionScore,.05,.3);
+  if(Math.abs(sn.trendStrength||0)>.0002) w.trendStrength=clamp(w.trendStrength+sign*lr,.05,.25);
+  if((sn.whaleActivity||0)>.3)         w.whale=clamp(w.whale+sign*lr*sn.whaleActivity,.03,.25);
+  const tot=Object.values(w).reduce((a,b)=>a+b,0);
+  Object.keys(w).forEach(k=>w[k]=w[k]/tot);
+  const ra=B.accuracy.total>5?B.accuracy.correct/B.accuracy.total:0.5;
+  B.calibration.confidenceBoost=clamp(0.75+ra*0.5,0.75,1.25);
+  log('learn','⚡','LEARN',
+    `Weights updated: cvd=${w.cvdSlope.toFixed(3)} mom=${w.momentum.toFixed(3)} `+
+    `aggr=${w.aggressionIndex.toFixed(3)} abs=${w.absorption.toFixed(3)} `+
+    `tr=${w.trendStrength.toFixed(3)} wh=${w.whale.toFixed(3)} | `+
+    `boost=<span class="a">${(B.calibration.confidenceBoost*100).toFixed(0)}%</span>`);
 }
 
-// ── Deep Analysis Cycle ───────────────────────────────────────
-let lastAnalysisTime = 0;
-let analysisCount = 0;
-
+// ══════════════════════════
+// ANALYSIS CYCLE
+// ══════════════════════════
+let lastAnalAt=0, cycle=0;
 function runAnalysis() {
-  if (!state.price || state.priceHistory.length < 15) return;
-
-  const now = Date.now();
-  if (now - lastAnalysisTime < ANALYSIS_INTERVAL) return;
-  lastAnalysisTime = now;
-  analysisCount++;
-
-  const m = computeMetrics();
+  if(!S.price||S.priceHistory.length<15) return;
+  if(Date.now()-lastAnalAt<ANALYSIS_MS) return;
+  lastAnalAt=Date.now(); cycle++;
+  const m=computeMetrics();
   updateMetricsUI(m);
-
-  // Only log full analysis every 3rd cycle to keep logs clean
-  if (analysisCount % 3 === 1) {
-    logAnalysis(m);
-  }
-
-  // Special event detection (always)
-  detectSpecialEvents(m);
-
-  // Evaluate pending predictions
+  updateCVDChart();
+  if(cycle%3===1) logAnalysis(m);
+  detectEvents(m);
   evaluatePredictions();
 }
 
 function logAnalysis(m) {
-  const dir = m.sentiment > 0.55 ? 'BULL' : m.sentiment < 0.45 ? 'BEAR' : 'NEUTRAL';
-  const dirColor = dir === 'BULL' ? 'hl-green' : dir === 'BEAR' ? 'hl-red' : 'hl-yellow';
-
-  log('analysis', '📊', 'ANALYSIS',
-    `Phase: <span class="hl-accent">${m.phase.toUpperCase()}</span> | ` +
-    `Bias: <span class="${dirColor}">${dir}</span> | ` +
-    `BuyRatio: <span class="${m.buyRatio>0.52?'hl-green':'hl-red'}">${(m.buyRatio*100).toFixed(1)}%</span> | ` +
-    `OB Imbal: <span class="${m.orderImbalance>0?'hl-green':'hl-red'}">${(m.orderImbalance*100).toFixed(1)}%</span> | ` +
-    `ATR: <span class="hl-yellow">${(m.atr1m*100).toFixed(3)}%</span> | ` +
-    `Freq: <span class="hl-accent">${m.tradeFreq}/min</span>`
-  );
+  const bias=m.sentiment>0.55?'<span class="g">BULL</span>':m.sentiment<0.45?'<span class="r">BEAR</span>':'<span class="y">NEUTRAL</span>';
+  const cvdC=m.cvd60s>=0?'<span class="g">+':'<span class="r">';
+  log('analysis','📊','ANALYSIS',
+    `Bias:${bias} | CVD:${cvdC}${m.cvd60s.toFixed(2)}</span> | `+
+    `Aggr:<span class="${m.aggressionIndex>0?'g':'r'}">${(m.aggressionIndex*100).toFixed(0)}%</span> | `+
+    `ATR:<span class="y">${(m.atr1m*100).toFixed(3)}%</span> | `+
+    `Freq:<span class="a">${m.tradeFreq}/min</span> | `+
+    `Quality:<span class="${m.signalQuality>0.5?'g':'y'}">${(m.signalQuality*100).toFixed(0)}%</span>`);
 }
 
-function detectSpecialEvents(m) {
-  // Absorption event
-  if (m.absorptionScore > brain.calibration.absorptionThreshold) {
-    const dir = m.momentum < 0 ? 'downtrend' : 'uptrend';
-    log('absorption', '🧲', 'ABSORPTION',
-      `Absorption detected in ${dir} — ` +
-      `Score: <span class="hl-orange">${(m.absorptionScore*100).toFixed(0)}%</span> | ` +
-      `High vol + small body candles. ` +
-      `${m.momentum < 0 ? 'Sellers being absorbed → potential reversal' : 'Buyers being absorbed → potential exhaustion'}`
-    );
+function detectEvents(m) {
+  if(m.absorptionScore>B.calibration.absorptionThreshold) {
+    log('absorption','🧲','ABSORPTION',
+      `Score:<span class="o">${(m.absorptionScore*100).toFixed(0)}%</span> — `+
+      `High vol + tight candle body while price ${m.momentum<0?'falling':'rising'}. `+
+      `${m.momentum<0?'Sellers absorbed → potential bid/reversal':'Buyers absorbed → exhaustion risk'}`);
   }
-
-  // Spike alert
-  if (m.spikeRisk > brain.calibration.spikeThreshold * 300) {
-    const potDir = m.orderImbalance > 0 ? 'UP' : 'DOWN';
-    log('spike', '⚡', 'SPIKE RISK',
-      `Spike potential ${potDir} — ` +
-      `Risk: <span class="hl-red">${(m.spikeRisk*100).toFixed(0)}%</span> | ` +
-      `Trade freq: ${m.tradeFreq}/min | ` +
-      `Price may overshoot before reverting`
-    );
+  // CVD divergence (most important: price vs real flow disagreement)
+  if(m.momentum>0.0015&&m.cvd60s<-0.3) {
+    log('spike','🔀','CVD DIVERGENCE',
+      `Price <span class="g">↑ +${(m.momentum*100).toFixed(3)}%</span> but CVD `+
+      `<span class="r">negative ${m.cvd60s.toFixed(2)}</span> — `+
+      `Real sell flow dominant. Rally may be fake. Fade/spike risk.`);
+  } else if(m.momentum<-0.0015&&m.cvd60s>0.3) {
+    log('spike','🔀','CVD DIVERGENCE',
+      `Price <span class="r">↓ ${(m.momentum*100).toFixed(3)}%</span> but CVD `+
+      `<span class="g">positive +${m.cvd60s.toFixed(2)}</span> — `+
+      `Real buy flow underneath. Drop may be temporary. Watch for recovery.`);
   }
-
-  // Whale alert
-  if (m.whaleActivity > 0.55) {
-    log('analysis', '🐋', 'WHALE',
-      `Large trader activity detected — Score: <span class="hl-purple">${(m.whaleActivity*100).toFixed(0)}%</span> | ` +
-      `Consistent with ${m.buyRatio > 0.5 ? 'accumulation' : 'distribution'} behavior`
-    );
+  if(m.spikeRisk>B.calibration.spikeThreshold) {
+    log('spike','⚡','SPIKE RISK',
+      `<span class="r">${(m.spikeRisk*100).toFixed(0)}%</span> — `+
+      `Momentum + trade acceleration pattern. Overshoot likely. Phase: ${m.phase.toUpperCase()}`);
   }
-
-  // Compression → breakout setup
-  if (m.phase === 'compression' && m.tradeFreq > 60) {
-    log('analysis', '🔋', 'COMPRESSION',
-      `Price compression with moderate activity — ` +
-      `Potential energy building. Watch for breakout. ` +
-      `OB tilt: <span class="${m.orderImbalance>0?'hl-green':'hl-red'}">${m.orderImbalance>0?'bid':'ask'}-heavy</span>`
-    );
+  if(m.whaleActivity>0.55) {
+    const side=m.aggressionIndex>0?'buy-side':'sell-side';
+    log('analysis','🐋','WHALE',
+      `<span class="p">${(m.whaleActivity*100).toFixed(0)}%</span> large trade activity — `+
+      `Concentrated <span class="${m.aggressionIndex>0?'g':'r'}">${side}</span>. `+
+      `${m.aggressionIndex>0?'Accumulation':'Distribution'} pattern.`);
+  }
+  if(m.phase==='compression') {
+    const tilt=m.cvd60s>0?'<span class="g">buy-biased</span>':'<span class="r">sell-biased</span>';
+    log('analysis','🔋','COMPRESSION',
+      `Tight range — ATR ${(m.atr1m*100).toFixed(3)}%. CVD: ${tilt}. Energy coiling for breakout.`);
   }
 }
 
-// ── Prediction Cycle ──────────────────────────────────────────
-let lastPredTime = 0;
-
+// ══════════════════════════
+// PREDICTION CYCLE
+// ══════════════════════════
+let lastPredAt=0;
 function runPrediction() {
-  const now = Date.now();
-  if (now - lastPredTime < PREDICTION_INTERVAL) return;
-  if (!state.price || state.priceHistory.length < 30) return;
-  lastPredTime = now;
-
-  const pred = generateProjection();
-  if (!pred) return;
-
-  brain.predictions.push(pred);
+  if(Date.now()-lastPredAt<PRED_MS) return;
+  if(!S.price||S.priceHistory.length<30) return;
+  lastPredAt=Date.now();
+  const pred=generateProjection();
+  if(!pred) return;
+  B.predictions.push(pred);
   updateProjectionUI(pred);
   saveBrain();
-
-  const dirEmoji = pred.direction === 'bull' ? '🟢' : pred.direction === 'bear' ? '🔴' : '🟡';
-  const dirLabel = pred.direction.toUpperCase();
-  const confPct = (pred.confidence * 100).toFixed(0);
-
-  log('prediction', '🎯', 'PROJECTION',
-    `${dirEmoji} <span class="${pred.direction==='bull'?'hl-green':pred.direction==='bear'?'hl-red':'hl-yellow'}">${dirLabel}</span> | ` +
-    `Target: <span class="hl-accent">$${pred.projPrice.toLocaleString()}</span> ` +
-    `[${pred.rangeLow.toLocaleString()} — ${pred.rangeHigh.toLocaleString()}] | ` +
-    `Horizon: <span class="hl-yellow">~${pred.horizonMin}min</span> | ` +
-    `Confidence: <span class="${+confPct>65?'hl-green':+confPct>45?'hl-yellow':'hl-red'}">${confPct}%</span>`
-  );
-
-  // Log reasons
-  pred.reasons.slice(0, 4).forEach(r => {
-    log('prediction', '  ', '', `<span class="dim">└</span> ${r}`);
-  });
-
-  // Pattern match
-  if (pred.matchedPattern) {
-    log('learn', '🔗', 'PATTERN',
-      `Similar historical situation — ` +
-      `Prior outcome: ${pred.matchedPattern.outcome.directionalHit ? '<span class="hl-green">correct direction</span>' : '<span class="hl-red">wrong direction</span>'} | ` +
-      `Similarity: ${((1-pred.matchedPattern.dist)*100).toFixed(0)}%`
-    );
+  const de=pred.dir==='bull'?'🟢':pred.dir==='bear'?'🔴':'🟡';
+  const dc=pred.dir==='bull'?'g':pred.dir==='bear'?'r':'y';
+  const cp=(pred.conf*100).toFixed(0);
+  log('prediction','🎯','PROJECTION',
+    `${de} <span class="${dc}">${pred.dir.toUpperCase()}</span> | `+
+    `Target:<span class="a">$${pred.projPrice.toLocaleString()}</span> `+
+    `[${pred.rangeLow.toLocaleString()}–${pred.rangeHigh.toLocaleString()}] | `+
+    `~<span class="y">${pred.horizonMin}min</span> | `+
+    `Conf:<span class="${+cp>65?'g':+cp>45?'y':'r'}">${cp}%</span> | `+
+    `Move:$${pred.expectedMv.toFixed(0)} vs gate $${pred.threshold.toFixed(0)}`);
+  pred.reasons.slice(0,4).forEach(r=>log('prediction','','',`<span class="d">└</span> ${r}`));
+  if(pred.match) {
+    const sim=((1-pred.match.dist)*100).toFixed(0);
+    log('learn','🔗','PATTERN',
+      `${sim}% similar past context — `+
+      `Prior: ${pred.match.outcome.directionalHit?'<span class="g">correct</span>':'<span class="r">wrong</span>'} direction`);
   }
-
   updateMemoryUI();
+  flashFAB();
 }
 
-// ── UI Updaters ───────────────────────────────────────────────
+// ══════════════════════════
+// UI UPDATERS
+// ══════════════════════════
+function set(id,txt,col) {
+  const e=document.getElementById(id);
+  if(!e) return;
+  e.textContent=txt;
+  if(col) e.style.color=col;
+}
+
 function updateMetricsUI(m) {
-  const buyPct = (m.buyRatio * 100).toFixed(1) + '%';
-  const buyEl = document.getElementById('m-buy');
-  buyEl.textContent = buyPct;
-  buyEl.style.color = m.buyRatio > 0.52 ? 'var(--green)' : m.buyRatio < 0.48 ? 'var(--red)' : 'var(--text)';
+  const total=m.buyVol60s+m.sellVol60s+.001;
+  const cvdC=m.cvd60s>0.5?'var(--green)':m.cvd60s<-0.5?'var(--red)':'var(--text)';
+  set('m-cvd',(m.cvd60s>=0?'+':'')+m.cvd60s.toFixed(2)+' ₿',cvdC);
+  set('m-freq',m.tradeFreq,m.tradeFreq>150?'var(--orange)':'var(--text)');
+  const vd=m.vwapDev||0;
+  set('m-vwap',(vd>=0?'+':'')+(vd*100).toFixed(3)+'%',vd>0.001?'var(--green)':vd<-0.001?'var(--red)':'var(--text)');
+  set('m-atr',((m.atr1m||0)*100).toFixed(3)+'%',m.atr1m>0.002?'var(--orange)':'var(--text)');
 
-  document.getElementById('m-freq').textContent = m.tradeFreq;
-  document.getElementById('m-freq').style.color = m.tradeFreq > 150 ? 'var(--accent2)' : 'var(--text)';
+  const cvdC2=m.cvd60s>=0?'var(--green)':'var(--red)';
+  set('cvd-60s',(m.cvd60s>=0?'+':'')+m.cvd60s.toFixed(3),cvdC2);
+  set('cvd-slope',(m.cvdSlope>=0?'+':'')+(m.cvdSlope*10000).toFixed(2)+'/10k',m.cvdSlope>0?'var(--green)':m.cvdSlope<0?'var(--red)':'var(--muted)');
+  set('cvd-buy',m.buyVol60s.toFixed(2)+' ₿');
+  set('cvd-sell',m.sellVol60s.toFixed(2)+' ₿');
 
-  const imbPct = (m.orderImbalance * 100).toFixed(1) + '%';
-  const imbEl = document.getElementById('m-imb');
-  imbEl.textContent = (m.orderImbalance > 0 ? '+' : '') + imbPct;
-  imbEl.style.color = m.orderImbalance > 0.1 ? 'var(--green)' : m.orderImbalance < -0.1 ? 'var(--red)' : 'var(--text)';
+  const setS=(id,txt,col)=>{ const e=document.getElementById(id); if(e){e.textContent=txt;e.style.color=col;} };
+  const cT=m.cvdSlope>0.00002?'↑ BULLISH':m.cvdSlope<-0.00002?'↓ BEARISH':'FLAT';
+  setS('sig-cvdt',cT,m.cvdSlope>0.00002?'var(--green)':m.cvdSlope<-0.00002?'var(--red)':'var(--muted)');
+  const mA=Math.abs(m.momentum);
+  setS('sig-mom',(m.momentum>0?'↑ ':m.momentum<0?'↓ ':'')+( mA>0.003?'STRONG':mA>0.001?'MILD':'FLAT'),
+    m.momentum>0.001?'var(--green)':m.momentum<-0.001?'var(--red)':'var(--muted)');
+  const trL=Math.abs(m.trendStrength)<0.0002?'SIDEWAYS':m.trendStrength>0?'↑ UP':'↓ DOWN';
+  setS('sig-trend',trL,m.trendStrength>0.0002?'var(--green)':m.trendStrength<-0.0002?'var(--red)':'var(--muted)');
+  setS('sig-abs',m.absorptionScore>0.6?'STRONG':m.absorptionScore>0.35?'PRESENT':'NONE',m.absorptionScore>0.5?'var(--orange)':'var(--muted)');
+  setS('sig-aggr',m.aggressionIndex>0.2?'BUYERS 🟢':m.aggressionIndex<-0.2?'SELLERS 🔴':'BALANCED',
+    m.aggressionIndex>0.15?'var(--green)':m.aggressionIndex<-0.15?'var(--red)':'var(--muted)');
+  setS('sig-spike',m.spikeRisk>0.65?'HIGH ⚡':m.spikeRisk>0.4?'ELEVATED':'LOW',
+    m.spikeRisk>0.6?'var(--red)':m.spikeRisk>0.35?'var(--yellow)':'var(--green)');
+  setS('sig-whale',m.whaleActivity>0.5?'ACTIVE 🐋':m.whaleActivity>0.25?'MODERATE':'QUIET',
+    m.whaleActivity>0.5?'var(--purple)':'var(--muted)');
+  setS('sig-phase',m.phase.toUpperCase(),'var(--accent)');
 
-  const atrEl = document.getElementById('m-vol');
-  atrEl.textContent = (m.atr1m * 100).toFixed(3) + '%';
-  atrEl.style.color = m.atr1m > 0.002 ? 'var(--accent2)' : 'var(--text)';
-
-  // Signals
-  const setSignal = (id, val, label, color) => {
-    const el = document.getElementById(id);
-    el.textContent = label;
-    el.style.color = color;
-  };
-
-  const momLabel = m.momentum > 0.002 ? 'STRONG ↑' : m.momentum > 0.0005 ? 'MILD ↑' : m.momentum < -0.002 ? 'STRONG ↓' : m.momentum < -0.0005 ? 'MILD ↓' : 'FLAT';
-  setSignal('sig-mom', m.momentum, momLabel, m.momentum > 0.001 ? 'var(--green)' : m.momentum < -0.001 ? 'var(--red)' : 'var(--muted)');
-
-  const trendLabel = Math.abs(m.trendStrength) < 0.0002 ? 'SIDEWAYS' : m.trendStrength > 0 ? 'UPTREND' : 'DOWNTREND';
-  setSignal('sig-trend', m.trendStrength, trendLabel, m.trendStrength > 0.0002 ? 'var(--green)' : m.trendStrength < -0.0002 ? 'var(--red)' : 'var(--muted)');
-
-  const absLabel = m.absorptionScore > 0.6 ? 'STRONG' : m.absorptionScore > 0.35 ? 'PRESENT' : 'NONE';
-  setSignal('sig-abs', m.absorptionScore, absLabel, m.absorptionScore > 0.5 ? 'var(--accent2)' : 'var(--muted)');
-
-  const spikeLabel = m.spikeRisk > 0.65 ? 'HIGH ⚡' : m.spikeRisk > 0.4 ? 'ELEVATED' : 'LOW';
-  setSignal('sig-spike', m.spikeRisk, spikeLabel, m.spikeRisk > 0.6 ? 'var(--red)' : m.spikeRisk > 0.35 ? 'var(--yellow)' : 'var(--green)');
-
-  setSignal('sig-phase', m.phase, m.phase.toUpperCase(), 'var(--accent)');
-
-  const whaleLabel = m.whaleActivity > 0.5 ? 'ACTIVE 🐋' : m.whaleActivity > 0.25 ? 'MODERATE' : 'QUIET';
-  setSignal('sig-whale', m.whaleActivity, whaleLabel, m.whaleActivity > 0.5 ? 'var(--purple)' : 'var(--muted)');
-
-  // Sentiment bar
-  const sentBar = document.getElementById('bar-sentiment');
-  sentBar.style.width = (m.sentiment * 100) + '%';
-  sentBar.style.background = m.sentiment > 0.6 ? 'var(--green)' : m.sentiment < 0.4 ? 'var(--red)' : 'var(--yellow)';
-
-  // AI mode bar
-  const aiMode = clamp(brain.accuracy.total / 20, 0, 1);
-  document.getElementById('bar-aimode').style.width = (aiMode * 100) + '%';
-
-  // Confidence
-  document.getElementById('ai-confidence').textContent = `Conf. boost: ${(brain.calibration.confidenceBoost * 100).toFixed(0)}%`;
+  const gS=document.getElementById('g-sent');
+  if(gS){gS.style.width=(m.sentiment*100)+'%';gS.style.background=m.sentiment>0.6?'var(--green)':m.sentiment<0.4?'var(--red)':'var(--yellow)';}
+  const gQ=document.getElementById('g-qual');
+  if(gQ){gQ.style.width=(m.signalQuality*100)+'%';}
+  const gE=document.getElementById('g-exp');
+  if(gE){gE.style.width=Math.min(100,B.experiences.length/3)+'%';}
 }
 
 function updateProjectionUI(pred) {
-  document.getElementById('proj-price').textContent = '$' + pred.projPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  document.getElementById('proj-price').style.color = pred.direction === 'bull' ? 'var(--green)' : pred.direction === 'bear' ? 'var(--red)' : 'var(--yellow)';
-
-  const tag = document.getElementById('proj-tag');
-  tag.textContent = pred.direction.toUpperCase();
-  tag.className = 'proj-tag ' + pred.direction;
-
-  document.getElementById('proj-range').textContent = `$${pred.rangeLow.toLocaleString()} – $${pred.rangeHigh.toLocaleString()}`;
-  document.getElementById('proj-horizon').textContent = `~${pred.horizonMin}min`;
-
-  const confBar = document.getElementById('proj-conf-bar');
-  confBar.style.width = (pred.confidence * 100) + '%';
-  confBar.style.background = pred.confidence > 0.65 ? 'var(--green)' : pred.confidence > 0.45 ? 'var(--yellow)' : 'var(--red)';
-
-  // Compact reason
-  document.getElementById('proj-reason').innerHTML = pred.reasons.slice(0, 3).join('<br>');
+  const pe=document.getElementById('proj-price');
+  pe.textContent='$'+pred.projPrice.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  pe.style.color=pred.dir==='bull'?'var(--green)':pred.dir==='bear'?'var(--red)':'var(--yellow)';
+  const tag=document.getElementById('proj-tag');
+  tag.textContent=pred.dir.toUpperCase();
+  tag.className='proj-tag '+pred.dir;
+  document.getElementById('proj-range').textContent=`$${pred.rangeLow.toLocaleString()}–$${pred.rangeHigh.toLocaleString()}`;
+  document.getElementById('proj-hz').textContent=`~${pred.horizonMin}min`;
+  const cf=document.getElementById('conf-fill');
+  cf.style.width=(pred.conf*100)+'%';
+  cf.style.background=pred.conf>0.65?'var(--green)':pred.conf>0.45?'var(--yellow)':'var(--red)';
+  document.getElementById('proj-why').innerHTML=pred.reasons.slice(0,3).join('<br>');
 }
 
 function updateMemoryUI() {
-  document.getElementById('mem-exp').textContent = brain.experiences.length;
-  document.getElementById('mem-pred').textContent = brain.predictions.length;
-  document.getElementById('mem-acc').textContent = accStr();
-  document.getElementById('mem-acc').style.color = brain.accuracy.total > 0
-    ? (brain.accuracy.correct / brain.accuracy.total > 0.55 ? 'var(--green)' : 'var(--red)')
-    : 'var(--muted)';
-  document.getElementById('mem-patterns').textContent = brain.experiences.length > 0
-    ? Math.min(brain.experiences.length, 999) : 0;
+  set('mem-exp',B.experiences.length);
+  set('mem-pred',B.predictions.length);
+  set('mem-acc',accStr(),B.accuracy.total>0?(B.accuracy.correct/B.accuracy.total>0.55?'var(--green)':'var(--red)'):'var(--muted)');
+  set('mem-filtered',B.stats.noiseFiltered);
+  set('mem-skip',noiseSkips);
 }
 
-// ── Log System ────────────────────────────────────────────────
-function log(type, icon, label, msg) {
-  const container = document.getElementById('log-container');
-  const now = new Date();
-  const time = now.toTimeString().slice(0,8);
-
-  const entry = document.createElement('div');
-  entry.className = 'log-entry ' + type;
-  entry.innerHTML = `
-    <div class="log-time">${time}</div>
-    <div class="log-icon">${icon}</div>
-    <div class="log-body">
-      ${label ? `<div class="log-label">${label}</div>` : ''}
-      <div class="log-msg">${msg}</div>
-    </div>
-  `;
-
-  container.appendChild(entry);
-  logCount++;
-
-  // Trim old logs
-  while (container.children.length > MAX_LOG) {
-    container.removeChild(container.firstChild);
-  }
-
-  if (autoScroll) container.scrollTop = container.scrollHeight;
+function updateNoiseUI() {
+  const ng=S.ng;
+  set('nf-thresh',ng.threshold?'$'+ng.threshold.toFixed(0):'—');
+  const expC=ng.expectedMove>ng.threshold?'var(--green)':'var(--red)';
+  set('nf-exp',ng.expectedMove?'$'+ng.expectedMove.toFixed(0):'—',expC);
+  const scC=ng.score>MIN_SCORE?'var(--green)':'var(--red)';
+  set('nf-score',ng.score?(ng.score*100).toFixed(2)+'%':'—',scC);
+  set('nf-dec',ng.decision,ng.decision.startsWith('PASS')?'var(--green)':'var(--yellow)');
+  set('nf-skip',ng.skipped);
 }
 
+// ══════════════════════════
+// LOG POPUP
+// ══════════════════════════
+let autoScroll=true, currentFilter='all', newCount=0, totalLog=0;
+
+function log(type,icon,label,msg) {
+  const c=document.getElementById('log-container');
+  const time=new Date().toTimeString().slice(0,8);
+  const entry=document.createElement('div');
+  entry.className='log-entry '+type+(currentFilter!=='all'&&type!==currentFilter?' hidden':'');
+  entry.dataset.type=type;
+  entry.innerHTML=
+    `<div class="log-time">${time}</div>`+
+    `<div class="log-icon">${icon}</div>`+
+    `<div class="log-body">`+
+    (label?`<div class="log-label">${label}</div>`:'')+
+    `<div class="log-msg">${msg}</div></div>`;
+  c.appendChild(entry);
+  totalLog++; newCount++;
+  while(c.children.length>MAX_LOG) c.removeChild(c.firstChild);
+  if(autoScroll) c.scrollTop=c.scrollHeight;
+  document.getElementById('log-count-lbl').textContent=totalLog+' entries';
+  const badge=document.getElementById('fab-badge');
+  badge.textContent=newCount>99?'99+':newCount;
+  badge.style.display='flex';
+}
+
+function openLog() {
+  document.getElementById('log-overlay').classList.add('open');
+  newCount=0;
+  document.getElementById('fab-badge').style.display='none';
+  if(autoScroll) setTimeout(()=>{
+    document.getElementById('log-container').scrollTop=9999;
+  },300);
+}
+function closeLog() { document.getElementById('log-overlay').classList.remove('open'); }
+function overlayClick(e) { if(e.target===document.getElementById('log-overlay')) closeLog(); }
 function toggleAutoScroll() {
-  autoScroll = !autoScroll;
-  document.getElementById('scroll-btn').textContent = `Auto-scroll ${autoScroll ? 'ON' : 'OFF'}`;
+  autoScroll=!autoScroll;
+  document.getElementById('scroll-btn').textContent='Auto-scroll '+(autoScroll?'ON':'OFF');
+}
+function setFilter(f,btn) {
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.log-entry').forEach(e=>{
+    if(f==='all'||e.dataset.type===f) e.classList.remove('hidden');
+    else e.classList.add('hidden');
+  });
+}
+function flashFAB() {
+  const fab=document.getElementById('log-fab');
+  fab.style.background='var(--yellow)';
+  fab.style.transform='scale(1.15)';
+  setTimeout(()=>{ fab.style.background='var(--accent)'; fab.style.transform=''; },600);
 }
 
-// ── Main Loop ─────────────────────────────────────────────────
-function mainLoop() {
-  runAnalysis();
-  runPrediction();
-  updateMemoryUI();
+// ══════════════════════════
+// HELPERS
+// ══════════════════════════
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;
+const stdDev=arr=>{ const m=avg(arr); return Math.sqrt(arr.reduce((a,b)=>a+Math.pow(b-m,2),0)/(arr.length||1)); };
+function linearTrend(arr) {
+  const n=arr.length; if(n<2) return 0;
+  const m=avg(arr); let num=0,den=0;
+  arr.forEach((v,i)=>{num+=(i-n/2)*(v-m);den+=Math.pow(i-n/2,2);});
+  return den?(num/den)/(m||1):0;
 }
 
-// ── Init ──────────────────────────────────────────────────────
+// ══════════════════════════
+// MAIN
+// ══════════════════════════
+function mainLoop() { runAnalysis(); runPrediction(); updateMemoryUI(); }
+
 function init() {
-  log('system', '🚀', 'SYSTEM', 'BTC AI Analyst initializing — self-learning mode active');
-  log('system', '📡', 'SYSTEM', 'Connecting to Binance WebSocket streams: aggTrade, kline_1m, kline_5m, depth20, miniTicker');
-
+  log('system','🚀','SYSTEM','BTC·AI Analyst v5 — CVD-driven, noise-gated, self-learning');
+  log('system','🔇','SYSTEM',`Noise gate: projected move must exceed ${NOISE_ATR_X}×ATR AND score ≥ ${MIN_SCORE}`);
+  log('system','❌','SYSTEM','Order book depth signals DISABLED — replaced by real trade flow (CVD, aggression, whale)');
+  log('system','📡','SYSTEM','Streams: aggTrade · kline_1m · kline_5m · miniTicker · depth5 (spread only)');
   loadBrain();
   initStreams();
-
-  // Start main loop
-  setInterval(mainLoop, 3000);
-
-  // Save brain periodically
-  setInterval(saveBrain, 30000);
-
-  // Initial UI
+  setInterval(mainLoop, 4000);
+  setInterval(saveBrain, 25000);
   updateMemoryUI();
-
-  log('system', '✅', 'SYSTEM', 'System ready — AI will generate first projection after 30s data warmup');
+  setTimeout(()=>log('system','✅','SYSTEM','Warmup complete — AI entering active mode'), 20000);
 }
 
 window.addEventListener('load', init);
