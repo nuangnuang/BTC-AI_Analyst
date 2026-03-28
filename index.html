@@ -315,8 +315,8 @@ const ANALYSIS_MS  = 10000;
 const PRED_MS      = 120000;
 const MAX_LOG      = 300;
 const NOISE_ATR_X  = 1.6;   // expected move must be >= 1.6x ATR
-const MIN_SCORE    = 0.55;  // minimum net signal score
-const MIN_QUALITY  = 0.3;   // minimum data quality
+const MIN_SCORE    = 0.3;  // minimum net signal score
+const MIN_QUALITY  = 0.22;   // minimum data quality
 
 // ══════════════════════════
 // STATE
@@ -476,7 +476,7 @@ function updatePriceDisplay() {
 let sparkBuf=[];
 function updateSparkline() {
   sparkBuf.push(S.price);
-  if(sparkBuf.length>1000) sparkBuf.shift();
+  if(sparkBuf.length>2000) sparkBuf.shift();
   const cv=document.getElementById('sparkline');
   const ctx=cv.getContext('2d');
   cv.width=cv.offsetWidth; cv.height=cv.offsetHeight;
@@ -1112,7 +1112,7 @@ function init() {
   setInterval(mainLoop, 4000);
   setInterval(saveBrain, 25000);
   updateMemoryUI();
-  setTimeout(()=>log('system','✅','SYSTEM','Warmup complete — AI entering active mode'), 600000);
+  setTimeout(()=>log('system','✅','SYSTEM','Warmup complete — AI entering active mode'), 20000);
 }
 
 window.addEventListener('load', init);
