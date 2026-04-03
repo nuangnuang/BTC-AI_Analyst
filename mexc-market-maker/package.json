@@ -1,0 +1,17 @@
+{
+  "name": "mexc-market-maker",
+  "version": "1.0.0",
+  "description": "High-Frequency Market Maker Bot for MEXC Spot with Dual-Mode (Simulation & Real)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": ["mexc", "market-maker", "hft", "trading-bot"],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.0",
+    "ws": "^8.16.0"
+  }
+}
